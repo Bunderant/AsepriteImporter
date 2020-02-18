@@ -1,13 +1,20 @@
-using UnityEditor;
+﻿using UnityEditor;
 using System.Diagnostics;
+using UnityEditor.Experimental.AssetImporters;
 using System.IO;
 
-namespace Miscreant.AsepriteImporter.Editor
+namespace Miscreant.Aseprite.Editor
 {
 	using Debug = UnityEngine.Debug;
 
-    public sealed class AnimationImporter : AssetImporter
+	[ScriptedImporter(1, new string[] { "aseprite", "ase" } )]
+    public sealed class AsepriteImporter : ScriptedImporter
     {
+		public override void OnImportAsset(AssetImportContext ctx)
+		{
+			Debug.Log("Imported an .ase file.");
+		}
+
 		[MenuItem("Miscreant/Aseprite Importer/Validate Aseprite Path")]
 		public static void CheckAsepriteInstallation()
 		{
