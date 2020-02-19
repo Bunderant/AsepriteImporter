@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using UnityEngine;
+using UnityEditor;
 using System.Diagnostics;
 using UnityEditor.Experimental.AssetImporters;
 using System.IO;
@@ -11,9 +12,42 @@ namespace Miscreant.Aseprite.Editor
 	[ScriptedImporter(1, new string[] { "aseprite", "ase" } )]
     public sealed class AsepriteImporter : ScriptedImporter
     {
+		private struct AseFileInfo
+		{
+			public readonly string fileAbsolutePath;
+			public readonly string fileName;
+			public readonly string title;
+			public readonly string extension;
+
+			public AseFileInfo(string asepriteFilePath)
+			{
+				this.fileAbsolutePath = asepriteFilePath;
+				this.fileName = asepriteFilePath.Substring(asepriteFilePath.LastIndexOf('/') + 1);
+				this.title = fileName.Substring(0, fileName.LastIndexOf('.'));
+				this.extension = fileName.Substring(title.Length + 1);
+			}
+
+			public override string ToString()
+			{
+				return $"{nameof(AseFileInfo)}:\n\t{nameof(title)}: {title}\n\t{nameof(extension)}: {extension}\n\t{nameof(fileName)}: {fileName}\n" + 
+					$"\t{nameof(fileAbsolutePath)}: {fileAbsolutePath}";
+			}
+		}
+
 		public override void OnImportAsset(AssetImportContext ctx)
 		{
 			Debug.Log("Imported an .ase file.");
+
+			string projectPath = Application.dataPath.Substring(0, Application.dataPath.LastIndexOf("/Assets"));
+			string asepriteFilePath = $"{projectPath}/{ctx.assetPath}";
+
+			var fileInfo = new AseFileInfo(asepriteFilePath);
+			Debug.Log(fileInfo.ToString());
+		}
+
+		private static void GenerateSpriteSheet(string asepriteFilePath, string atlasDirectoryPath)
+		{
+
 		}
 
 		private static void RunAsepriteProcess(params string[] args)
