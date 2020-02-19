@@ -72,11 +72,7 @@ namespace Miscreant.Aseprite.Editor
 		private static void RunAsepriteProcess(params string[] args)
 		{
 			var settings = (Settings)AssetDatabase.LoadAssetAtPath(Settings.PATH, typeof(Settings));
-
-			var processStartInfo = new ProcessStartInfo(
-				settings.asepritePath,
-				string.Join(" ", args)
-			);
+			var processStartInfo = new ProcessStartInfo(settings.asepritePath, string.Join(" ", args));
 
 			processStartInfo.RedirectStandardOutput = true;
 			processStartInfo.RedirectStandardError = true;
