@@ -36,18 +36,38 @@ namespace Miscreant.Aseprite.Editor
 
 		public override void OnImportAsset(AssetImportContext ctx)
 		{
-			Debug.Log("Imported an .ase file.");
-
 			string projectPath = Application.dataPath.Substring(0, Application.dataPath.LastIndexOf("/Assets"));
 			string asepriteFilePath = $"{projectPath}/{ctx.assetPath}";
 
 			var fileInfo = new AseFileInfo(asepriteFilePath);
-			Debug.Log(fileInfo.ToString());
+			GenerateSpriteSheet(fileInfo, Application.dataPath + "/Generated");
 		}
 
-		private static void GenerateSpriteSheet(string asepriteFilePath, string atlasDirectoryPath)
+		private static void GenerateSpriteSheet(AseFileInfo aseInfo, string atlasDirectoryPath)
 		{
+			if (!Directory.Exists(atlasDirectoryPath))
+			{
+				Directory.CreateDirectory(atlasDirectoryPath);
+			}
 
+			string atlasPath = $"{atlasDirectoryPath}/{aseInfo.title}.png";
+			string dataPath = $"{atlasDirectoryPath}/{aseInfo.title}.json";
+			if (!File.Exists(dataPath))
+			{
+				// Create a new file containing some valid JSON.
+				File.WriteAllText(dataPath, "{}");
+			}
+
+			RunAsepriteProcess(
+				"--batch",
+				"--debug",
+				aseInfo.fileAbsolutePath,
+				"--filename-format {title}_{tag}-{frame}",
+				"--sheet-type packed",
+				$"--sheet {atlasPath}",
+				"--format json-array",
+				$"--data {dataPath}"
+			);
 		}
 
 		private static void RunAsepriteProcess(params string[] args)
