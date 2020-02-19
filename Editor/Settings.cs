@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Miscreant.Aseprite
+namespace Miscreant.Aseprite.Editor
 {
 	[CreateAssetMenu(menuName = nameof(Miscreant) + "/" + nameof(Miscreant.Aseprite) + "/" + nameof(Settings))]
 	public sealed class Settings : ScriptableObject
