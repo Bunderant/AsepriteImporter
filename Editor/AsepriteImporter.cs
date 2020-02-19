@@ -68,7 +68,7 @@ namespace Miscreant.Aseprite.Editor
 				$"--data {dataPath}"
 			);
 
-			// TODO: Miscreant: Need to make sure assets are reimported if they are in a Package direcotry as well. 
+			// TODO: Miscreant: Need to make sure assets are reimported if they are in a Package directory as well. 
 			if (atlasDirectoryPath.Contains(Application.dataPath))
 			{
 				// Import the modified assets and refresh the AssetDatabase so created/modified files show up the project window. 
