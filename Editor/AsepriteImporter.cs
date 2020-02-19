@@ -63,6 +63,8 @@ namespace Miscreant.Aseprite.Editor
 				aseInfo.fileAbsolutePath,
 				"--filename-format {title}_{tag}-{frame}",
 				"--sheet-type packed",
+				"--inner-padding 1", // Add space for the sprites to be extruded by 1px later (no native Aseprite CLI support)
+				"--trim",
 				$"--sheet {atlasPath}",
 				"--format json-array",
 				$"--data {dataPath}"
