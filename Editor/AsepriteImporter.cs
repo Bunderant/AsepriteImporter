@@ -67,6 +67,23 @@ namespace Miscreant.Aseprite.Editor
 				"--format json-array",
 				$"--data {dataPath}"
 			);
+
+			// TODO: Miscreant: Need to make sure assets are reimported if they are in a Package direcotry as well. 
+			if (atlasDirectoryPath.Contains(Application.dataPath))
+			{
+				// Import the modified assets and refresh the AssetDatabase so created/modified files show up the project window. 
+				string projectPath = atlasDirectoryPath.Substring(0, Application.dataPath.Length - "Assets".Length);
+
+				AssetDatabase.ImportAsset(
+					atlasPath.Substring(projectPath.Length) // Take the path only from "Assets" onward
+				);
+
+				AssetDatabase.ImportAsset(
+					dataPath.Substring(projectPath.Length) // Take the path only from "Assets" onward
+				);
+
+				AssetDatabase.Refresh();
+			}
 		}
 
 		private static void RunAsepriteProcess(params string[] args)
