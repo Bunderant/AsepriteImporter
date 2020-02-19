@@ -1,16 +1,14 @@
 using UnityEditor;
-using UnityEngine;
+using UnityEditor.Experimental.AssetImporters;
 
 namespace Miscreant.Aseprite.Editor
 {
-	using Editor = UnityEditor.Editor;
-
 	[CustomEditor(typeof(AsepriteImporter))]
-	public class AsepriteImporterEditor : Editor
+	public class AsepriteImporterEditor : ScriptedImporterEditor
 	{
 		public override void OnInspectorGUI()
 		{
-			
+			base.ApplyRevertGUI();
 		}
 	}
 }
