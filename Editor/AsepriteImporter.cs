@@ -3,7 +3,6 @@ using UnityEditor;
 using System.Diagnostics;
 using UnityEditor.Experimental.AssetImporters;
 using System.IO;
-using System.Text;
 
 namespace Miscreant.Aseprite.Editor
 {
@@ -74,20 +73,9 @@ namespace Miscreant.Aseprite.Editor
 		{
 			var settings = (Settings)AssetDatabase.LoadAssetAtPath(Settings.PATH, typeof(Settings));
 
-			// Convert the arguments to a single concatenated string
-			var concatenatedArgs = new StringBuilder(string.Empty);
-			for (int i = 0; i < args.Length; i++)
-			{
-				concatenatedArgs.Append(args[i]);
-				if (i != args.Length - 1)
-				{
-					concatenatedArgs.Append(" ");
-				}
-			}
-
 			var processStartInfo = new ProcessStartInfo(
 				settings.asepritePath,
-				concatenatedArgs.ToString()
+				string.Join(" ", args)
 			);
 
 			processStartInfo.RedirectStandardOutput = true;
