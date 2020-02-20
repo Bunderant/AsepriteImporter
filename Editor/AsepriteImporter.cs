@@ -75,14 +75,11 @@ namespace Miscreant.Aseprite.Editor
 			string atlasAssetPath = atlasPath.Substring(projectPath.Length);	// Take the path only from "Assets" onward
 			string dataAssetPath = dataPath.Substring(projectPath.Length);		// Take the path only from "Assets" onward
 
-			// TODO: Miscreant: Need to make sure assets are reimported if they are in a Package directory as well. 
-			if (atlasDirectoryPath.Contains(Application.dataPath))
-			{
-				// Import the modified assets and refresh the AssetDatabase so created/modified files show up the project window. 
-				AssetDatabase.ImportAsset(atlasAssetPath);
-				AssetDatabase.ImportAsset(dataAssetPath);
-				AssetDatabase.Refresh();
-			}
+			// Import the modified assets and refresh the AssetDatabase so created/modified files show up the project window. 
+			AssetDatabase.ImportAsset(atlasAssetPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+			AssetDatabase.ImportAsset(dataAssetPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+			AssetDatabase.SaveAssets();
+			AssetDatabase.Refresh();
 		}
 
 		private static void RunAsepriteProcess(params string[] args)
