@@ -64,7 +64,7 @@ namespace Miscreant.Aseprite.Editor
 				"--batch",
 				"--debug",
 				aseInfo.fileAbsolutePath,
-				"--filename-format {title}_{tag}-{frame}",
+				"--filename-format {title}_{tag}-{tagframe}",
 				"--sheet-type packed",
 				"--inner-padding 1", // Add space for the sprites to be extruded by 1px later (no native Aseprite CLI support)
 				"--trim",
