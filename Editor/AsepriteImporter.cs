@@ -50,7 +50,13 @@ namespace Miscreant.Aseprite.Editor
 			string asepriteFilePath = $"{projectPath}/{ctx.assetPath}";
 			var fileInfo = new AseFileInfo(asepriteFilePath);
 
-			GenerateSpriteSheet(fileInfo);
+			// Delay asset generation so we can access the AssetImporter for the newly created atlas. 
+			EditorApplication.delayCall += Delayed;
+			void Delayed()
+			{
+				EditorApplication.delayCall -= Delayed;
+				GenerateSpriteSheet(fileInfo);
+			}
 		}
 
 		private void GenerateSpriteSheet(AseFileInfo aseInfo)
@@ -61,11 +67,9 @@ namespace Miscreant.Aseprite.Editor
 			string atlasPath = $"{atlasDirectoryAbsolutePath}/{aseInfo.title}{ATLAS_SUFFIX}.png";
 			string dataPath = $"{atlasDirectoryAbsolutePath}/{aseInfo.title}{ATLAS_SUFFIX}.json";
 
-			if (!File.Exists(dataPath))
-			{
-				// Create a new file containing some valid JSON.
-				File.WriteAllText(dataPath, "{}");
-			}
+			// Create a temporary valid JSON file so Aseprite has something to write into.
+			// The file will be deleted after the json data is transferred to the meta file of the generated atlas. 
+			File.WriteAllText(dataPath, "{}");
 
 			RunAsepriteProcess(
 				"--batch",
@@ -81,11 +85,19 @@ namespace Miscreant.Aseprite.Editor
 				$"--data {dataPath}"
 			);
 
-			// Import the modified assets and refresh the AssetDatabase so created/modified files show up the project window. 
-			AssetDatabase.ImportAsset(GetAssetPath(dataPath), ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
-			AssetDatabase.ImportAsset(GetAssetPath(atlasPath), ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+			string atlasAssetPath = GetAssetPath(atlasPath);
 
-			AssetDatabase.SaveAssets();
+			// Import the atlas immediately so we can access its importer to store JSON data in the meta file. 
+			AssetDatabase.ImportAsset(atlasAssetPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+
+			TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(atlasAssetPath);
+			importer.userData = File.ReadAllText(dataPath);
+			AssetDatabase.WriteImportSettingsIfDirty(atlasAssetPath);
+
+			// Now that we have the JSON data stored elsewhere, delete the temp JSON file. 
+			File.Delete(dataPath);
+			
+			// TODO: Miscreant: This shouldn't be done once per import. Wait til everything's been imported. 
 			AssetDatabase.Refresh();
 		}
 
