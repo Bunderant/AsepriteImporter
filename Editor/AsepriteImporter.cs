@@ -3,7 +3,6 @@ using UnityEditor;
 using System.Diagnostics;
 using UnityEditor.Experimental.AssetImporters;
 using System.IO;
-using System.Collections.Generic;
 
 namespace Miscreant.Aseprite.Editor
 {
@@ -136,53 +135,6 @@ namespace Miscreant.Aseprite.Editor
 					Debug.LogError(output);
 				}
 			}
-		}
-
-		public static void UpdatePackedSprites(TextureImporter ti, SpriteSheetData sheetData)
-		{
-			List<SpriteMetaData> existingSpriteData = new List<SpriteMetaData>(ti.spritesheet);
-			List<SpriteMetaData> newSpriteData = new List<SpriteMetaData>(sheetData.frames.Length);
-
-			int atlasHeight = sheetData.meta.size.h;
-			foreach (SpriteSheetData.Frame frame in sheetData.frames)
-			{
-				var newSprite = new SpriteMetaData();
-
-				int matchIndex = existingSpriteData.FindIndex((sprite) => {
-					return sprite.name.Equals(frame.filename);
-				});
-
-				if (matchIndex >= 0)
-				{
-					var existingSprite = existingSpriteData[matchIndex];
-					
-					newSprite.border = existingSprite.border;
-					newSprite.name = existingSprite.name;
-				}
-				else
-				{
-					newSprite.border = Vector4.zero;
-					newSprite.name = frame.filename;
-				}
-
-				newSprite.alignment = (int)SpriteAlignment.Custom;
-				newSprite.pivot = new Vector2(
-					(frame.sourceSize.w * 0.5f - frame.spriteSourceSize.x) / frame.frame.w,
-					(frame.sourceSize.h * 0.5f - (frame.sourceSize.h - frame.spriteSourceSize.y - frame.frame.h)) / frame.frame.h
-				);
-				
-				var textureRect = frame.GetUnityTextureRect(atlasHeight);
-				newSprite.rect = new Rect(
-					textureRect.x,
-					textureRect.y,
-					textureRect.w,
-					textureRect.h
-				);
-
-				newSpriteData.Add(newSprite);
-			}
-
-			ti.spritesheet = newSpriteData.ToArray();
 		}
     }
 }

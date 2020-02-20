@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using Miscreant.Aseprite.Editor;
+using System.Collections.Generic;
 using System.IO;
 
 /// <summary>
@@ -21,7 +22,54 @@ class AsepriteAtlasPostprocessor : AssetPostprocessor // TODO: Miscreant: Move t
 
 			var sheetData = JsonUtility.FromJson<SpriteSheetData>(File.ReadAllText(dataAbsolutePath));
 
-			AsepriteImporter.UpdatePackedSprites((TextureImporter)assetImporter, sheetData);
+			UpdatePackedSprites((TextureImporter)assetImporter, sheetData);
 		}
+	}
+
+	private static void UpdatePackedSprites(TextureImporter ti, SpriteSheetData sheetData)
+	{
+		List<SpriteMetaData> existingSpriteData = new List<SpriteMetaData>(ti.spritesheet);
+		List<SpriteMetaData> newSpriteData = new List<SpriteMetaData>(sheetData.frames.Length);
+
+		int atlasHeight = sheetData.meta.size.h;
+		foreach (SpriteSheetData.Frame frame in sheetData.frames)
+		{
+			var newSprite = new SpriteMetaData();
+
+			int matchIndex = existingSpriteData.FindIndex((sprite) => {
+				return sprite.name.Equals(frame.filename);
+			});
+
+			if (matchIndex >= 0)
+			{
+				var existingSprite = existingSpriteData[matchIndex];
+				
+				newSprite.border = existingSprite.border;
+				newSprite.name = existingSprite.name;
+			}
+			else
+			{
+				newSprite.border = Vector4.zero;
+				newSprite.name = frame.filename;
+			}
+
+			newSprite.alignment = (int)SpriteAlignment.Custom;
+			newSprite.pivot = new Vector2(
+				(frame.sourceSize.w * 0.5f - frame.spriteSourceSize.x) / frame.spriteSourceSize.w,
+				(frame.sourceSize.h * 0.5f - (frame.sourceSize.h - frame.spriteSourceSize.y - frame.spriteSourceSize.h)) / frame.spriteSourceSize.h
+			);
+			
+			var textureRect = frame.GetUnityTextureRect(atlasHeight);
+			newSprite.rect = new Rect(
+				textureRect.x,
+				textureRect.y,
+				textureRect.w,
+				textureRect.h
+			);
+
+			newSpriteData.Add(newSprite);
+		}
+
+		ti.spritesheet = newSpriteData.ToArray();
 	}
 }
