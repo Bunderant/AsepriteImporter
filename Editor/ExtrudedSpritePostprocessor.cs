@@ -2,6 +2,7 @@
 using UnityEditor;
 using Miscreant.Aseprite.Editor;
 using System.IO;
+using Unity.Collections;
 
 using Rect = Miscreant.Aseprite.Editor.SpriteSheetData.Rect;
 
@@ -24,6 +25,8 @@ class ExtrudedSpritePostprocessor : AssetPostprocessor // TODO: Miscreant: Move 
 			string dataAbsolutePath = projectPath + "/" + dataAssetPath;
 			var sheetData = JsonUtility.FromJson<SpriteSheetData>(File.ReadAllText(dataAbsolutePath));
 
+			NativeArray<Color32> pixelData = texture.GetRawTextureData<Color32>();
+
 			foreach (SpriteSheetData.Frame frameData in sheetData.frames)
 			{
 				Rect spriteRect = frameData.GetUnityTextureRect(texture.height);
@@ -31,61 +34,53 @@ class ExtrudedSpritePostprocessor : AssetPostprocessor // TODO: Miscreant: Move 
 				ExtrudeCorners(texture, spriteRect);
 
 				ExtrudeVerticalEdge(
-					texture,
 					spriteRect.x,
 					spriteRect.y,
 					spriteRect.y + spriteRect.h,
 					-1);
 
 				ExtrudeVerticalEdge(
-					texture,
 					spriteRect.x + spriteRect.w - 1,
 					spriteRect.y,
 					spriteRect.y + spriteRect.h,
 					1);
 
 				ExtrudeHorizontalEdge(
-					texture,
 					spriteRect.y,
 					spriteRect.x,
 					spriteRect.x + spriteRect.w,
 					-1);
 
 				ExtrudeHorizontalEdge(
-					texture,
 					spriteRect.y + spriteRect.h - 1,
 					spriteRect.x,
 					spriteRect.x + spriteRect.w,
 					1);
 			}
 
-			texture.Apply();
-		}
-	}
+			void ExtrudeVerticalEdge(int x, int yMin, int yMax, int direction)
+			{
+				for (int y = yMin; y < yMax; y++)
+				{
+					int fromIndex = x + y * texture.width;
+					int toIndex = x + direction + y * texture.width;
 
-	private static void ExtrudeVerticalEdge(Texture2D texture, int x, int yMin, int yMax, int direction)
-	{
-		for (int y = yMin; y < yMax; y++)
-		{
-			Color32 extrudedColor = texture.GetPixel(x, y);
-			texture.SetPixel(
-				x + direction,
-				y,
-				extrudedColor
-			);
-		}
-	}
+					pixelData[toIndex] = pixelData[fromIndex];
+				}
+			}
 
-	private static void ExtrudeHorizontalEdge(Texture2D texture, int y, int xMin, int xMax, int direction)
-	{
-		for (int x = xMin; x < xMax; x++)
-		{
-			Color32 extrudedColor = texture.GetPixel(x, y);
-			texture.SetPixel(
-				x,
-				y + direction,
-				extrudedColor
-			);
+			void ExtrudeHorizontalEdge(int y, int xMin, int xMax, int direction)
+			{
+				for (int x = xMin; x < xMax; x++)
+				{
+					int fromIndex = x + y * texture.width;
+					int toIndex = x + (y + direction) * texture.width;
+
+					pixelData[toIndex] = pixelData[fromIndex];
+				}
+			}
+
+			texture.SetPixelData<Color32>(pixelData, 0);
 		}
 	}
 
