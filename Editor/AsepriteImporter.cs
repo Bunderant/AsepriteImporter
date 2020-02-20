@@ -49,8 +49,9 @@ namespace Miscreant.Aseprite.Editor
 				Directory.CreateDirectory(atlasDirectoryPath);
 			}
 
-			string atlasPath = $"{atlasDirectoryPath}/{aseInfo.title}.png";
-			string dataPath = $"{atlasDirectoryPath}/{aseInfo.title}.json";
+			string atlasPath = $"{atlasDirectoryPath}/{aseInfo.title}_extruded.png";
+			string dataPath = $"{atlasDirectoryPath}/{aseInfo.title}_extruded.json";
+
 			if (!File.Exists(dataPath))
 			{
 				// Create a new file containing some valid JSON.
