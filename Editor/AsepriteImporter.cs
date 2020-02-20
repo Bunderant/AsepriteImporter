@@ -69,6 +69,7 @@ namespace Miscreant.Aseprite.Editor
 				"--inner-padding 1", // Add space for the sprites to be extruded by 1px later (no native Aseprite CLI support)
 				"--trim",
 				$"--sheet {atlasPath}",
+				"--list-tags",
 				"--format json-array",
 				$"--data {dataPath}"
 			);

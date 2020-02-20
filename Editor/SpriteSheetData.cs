@@ -58,6 +58,16 @@ namespace Miscreant.Aseprite.Editor
 			public string format;
 			public Rect size;
 			public string scale;
+			public FrameTag[] frameTags;
+		}
+
+		[Serializable]
+		public struct FrameTag
+		{
+			public string name;
+			public int from;
+			public int to;
+			public string direction;
 		}
 
 		public Frame[] frames;
