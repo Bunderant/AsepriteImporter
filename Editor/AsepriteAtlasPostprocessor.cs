@@ -10,13 +10,6 @@ class AsepriteAtlasPostprocessor : AssetPostprocessor // TODO: Miscreant: Move t
 {
 	void OnPreprocessTexture()
 	{
-		Debug.Log("Preprocess");
-	}
-
-	void OnPostprocessTexture(Texture2D texture)
-	{
-		Debug.Log(assetPath);
-
 		if (assetPath.Contains(AsepriteImporter.ATLAS_SUFFIX))
 		{
 			// Check for associated JSON data, must be in the same folder.
