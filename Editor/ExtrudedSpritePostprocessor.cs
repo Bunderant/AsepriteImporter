@@ -11,14 +11,16 @@ using Rect = Miscreant.Aseprite.Editor.SpriteSheetData.Rect;
 /// </summary>
 class ExtrudedSpritePostprocessor : AssetPostprocessor // TODO: Miscreant: Move this to a precompiled .dll to prevent modification once it's stable
 {
+	const string SUFFIX = "_extruded";
+
 	void OnPostprocessTexture(Texture2D texture)
 	{
 		Debug.Log(assetPath);
 
-		if (assetPath.Contains("_extruded"))
+		if (assetPath.Contains(SUFFIX))
 		{
 			// Check for associated JSON data, must be in the same folder.
-			string dataAssetPath = assetPath.Substring(0, assetPath.LastIndexOf("_extruded")) + "_extruded.json";
+			string dataAssetPath = assetPath.Substring(0, assetPath.LastIndexOf(SUFFIX)) + $"{SUFFIX}.json";
 
 			// Load the sheet data via File IO since there's a chance Unity may not have imported it as an asset yet
 			string projectPath = Application.dataPath.Substring(0, Application.dataPath.LastIndexOf("/Assets"));
