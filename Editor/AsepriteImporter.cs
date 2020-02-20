@@ -18,15 +18,15 @@ namespace Miscreant.Aseprite.Editor
 
 		private struct AseFileInfo
 		{
-			public readonly string fileAbsolutePath;
+			public readonly string absolutePath;
 			public readonly string fileName;
 			public readonly string title;
 			public readonly string extension;
 
-			public AseFileInfo(string asepriteFilePath)
+			public AseFileInfo(string asepriteAssetPath)
 			{
-				this.fileAbsolutePath = asepriteFilePath;
-				this.fileName = asepriteFilePath.Substring(asepriteFilePath.LastIndexOf('/') + 1);
+				this.absolutePath = GetAbsolutePath(asepriteAssetPath);
+				this.fileName = asepriteAssetPath.Substring(asepriteAssetPath.LastIndexOf('/') + 1);
 				this.title = fileName.Substring(0, fileName.LastIndexOf('.'));
 				this.extension = fileName.Substring(title.Length + 1);
 			}
@@ -34,7 +34,7 @@ namespace Miscreant.Aseprite.Editor
 			public override string ToString()
 			{
 				return $"{nameof(AseFileInfo)}:\n\t{nameof(title)}: {title}\n\t{nameof(extension)}: {extension}\n\t{nameof(fileName)}: {fileName}\n" + 
-					$"\t{nameof(fileAbsolutePath)}: {fileAbsolutePath}";
+					$"\t{nameof(absolutePath)}: {absolutePath}";
 			}
 		}
 
@@ -46,9 +46,7 @@ namespace Miscreant.Aseprite.Editor
 				return;
 			}
 
-			string projectPath = Application.dataPath.Substring(0, Application.dataPath.LastIndexOf("/Assets"));
-			string asepriteFilePath = $"{projectPath}/{ctx.assetPath}";
-			var fileInfo = new AseFileInfo(asepriteFilePath);
+			var fileInfo = new AseFileInfo(ctx.assetPath);
 
 			// Delay asset generation so we can access the AssetImporter for the newly created atlas. 
 			EditorApplication.delayCall += Delayed;
@@ -74,7 +72,7 @@ namespace Miscreant.Aseprite.Editor
 			RunAsepriteProcess(
 				"--batch",
 				"--debug",
-				aseInfo.fileAbsolutePath,
+				aseInfo.absolutePath,
 				"--filename-format {title}_{tag}-{tagframe}",
 				"--sheet-type packed",
 				"--inner-padding 1", // Add space for the sprites to be extruded by 1px later (no native Aseprite CLI support)
