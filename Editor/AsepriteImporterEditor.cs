@@ -8,6 +8,7 @@ namespace Miscreant.Aseprite.Editor
 	{
 		public override void OnInspectorGUI()
 		{
+			DrawDefaultInspector();
 			base.ApplyRevertGUI();
 		}
 	}

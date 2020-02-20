@@ -8,10 +8,13 @@ namespace Miscreant.Aseprite.Editor
 {
 	using Debug = UnityEngine.Debug;
 
-	[ScriptedImporter(1, new string[] { "aseprite", "ase" } )]
+	[ScriptedImporter(2, new string[] { "aseprite", "ase" } )]
     public sealed class AsepriteImporter : ScriptedImporter
     {
 		public const string ATLAS_SUFFIX = "_aseprite";
+
+		[SerializeField]
+		private Object _targetAtlasDirectory;
 
 		private struct AseFileInfo
 		{
@@ -39,13 +42,16 @@ namespace Miscreant.Aseprite.Editor
 		{
 			string projectPath = Application.dataPath.Substring(0, Application.dataPath.LastIndexOf("/Assets"));
 			string asepriteFilePath = $"{projectPath}/{ctx.assetPath}";
-
 			var fileInfo = new AseFileInfo(asepriteFilePath);
-			GenerateSpriteSheet(fileInfo, Application.dataPath + "/Generated");
+
+			GenerateSpriteSheet(fileInfo);
 		}
 
-		private static void GenerateSpriteSheet(AseFileInfo aseInfo, string atlasDirectoryPath)
+		private void GenerateSpriteSheet(AseFileInfo aseInfo)
 		{
+			string atlasAssetPath = AssetDatabase.GetAssetPath(_targetAtlasDirectory);
+
+			string atlasDirectoryPath = GetAbsolutePath(atlasAssetPath);
 			if (!Directory.Exists(atlasDirectoryPath))
 			{
 				Directory.CreateDirectory(atlasDirectoryPath);
@@ -74,12 +80,8 @@ namespace Miscreant.Aseprite.Editor
 				$"--data {dataPath}"
 			);
 
-			string projectPath = atlasDirectoryPath.Substring(0, Application.dataPath.Length - "Assets".Length);
-			string atlasAssetPath = atlasPath.Substring(projectPath.Length);	// Take the path only from "Assets" onward
-			string dataAssetPath = dataPath.Substring(projectPath.Length);		// Take the path only from "Assets" onward
-
 			// Import the modified assets and refresh the AssetDatabase so created/modified files show up the project window. 
-			AssetDatabase.ImportAsset(dataAssetPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+			AssetDatabase.ImportAsset(GetAssetPath(dataPath), ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
 			AssetDatabase.ImportAsset(atlasAssetPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
 
 			AssetDatabase.SaveAssets();
@@ -136,6 +138,24 @@ namespace Miscreant.Aseprite.Editor
 					Debug.LogError(output);
 				}
 			}
+		}
+
+		private static string GetAbsolutePath(string assetPath)
+		{
+			assetPath = assetPath.Substring("Assets".Length);
+			return Application.dataPath + "/" + assetPath;
+		}
+
+		private static string GetAssetPath(string absolutePath)
+		{
+			if (!absolutePath.Contains(Application.dataPath))
+			{
+				throw new System.Exception("Path must be part of Application.dataPath");
+			}
+
+			// Trim Application.dataPath from the front, rather than search for the "Assets" folder, 
+			// just in case there are other subfolders with that name. 
+			return absolutePath.Remove(0, Application.dataPath.Length - "Assets".Length);
 		}
     }
 }
