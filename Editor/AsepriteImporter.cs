@@ -14,7 +14,7 @@ namespace Miscreant.Aseprite.Editor
 		public const string ATLAS_SUFFIX = "_aseprite";
 
 		[SerializeField]
-		private Object _targetAtlasDirectory;
+		private DefaultAsset _targetAtlasDirectory = null;
 
 		private struct AseFileInfo
 		{
@@ -40,6 +40,12 @@ namespace Miscreant.Aseprite.Editor
 
 		public override void OnImportAsset(AssetImportContext ctx)
 		{
+			if (_targetAtlasDirectory == null || !AssetDatabase.IsValidFolder(AssetDatabase.GetAssetPath(_targetAtlasDirectory)))
+			{
+				Debug.LogError("Target atlas directory must be a valid folder under 'Assets'.");
+				return;
+			}
+
 			string projectPath = Application.dataPath.Substring(0, Application.dataPath.LastIndexOf("/Assets"));
 			string asepriteFilePath = $"{projectPath}/{ctx.assetPath}";
 			var fileInfo = new AseFileInfo(asepriteFilePath);
@@ -49,16 +55,11 @@ namespace Miscreant.Aseprite.Editor
 
 		private void GenerateSpriteSheet(AseFileInfo aseInfo)
 		{
-			string atlasAssetPath = AssetDatabase.GetAssetPath(_targetAtlasDirectory);
+			string atlasDirectoryAssetPath = AssetDatabase.GetAssetPath(_targetAtlasDirectory);
+			string atlasDirectoryAbsolutePath = GetAbsolutePath(atlasDirectoryAssetPath);
 
-			string atlasDirectoryPath = GetAbsolutePath(atlasAssetPath);
-			if (!Directory.Exists(atlasDirectoryPath))
-			{
-				Directory.CreateDirectory(atlasDirectoryPath);
-			}
-
-			string atlasPath = $"{atlasDirectoryPath}/{aseInfo.title}{ATLAS_SUFFIX}.png";
-			string dataPath = $"{atlasDirectoryPath}/{aseInfo.title}{ATLAS_SUFFIX}.json";
+			string atlasPath = $"{atlasDirectoryAbsolutePath}/{aseInfo.title}{ATLAS_SUFFIX}.png";
+			string dataPath = $"{atlasDirectoryAbsolutePath}/{aseInfo.title}{ATLAS_SUFFIX}.json";
 
 			if (!File.Exists(dataPath))
 			{
@@ -82,7 +83,7 @@ namespace Miscreant.Aseprite.Editor
 
 			// Import the modified assets and refresh the AssetDatabase so created/modified files show up the project window. 
 			AssetDatabase.ImportAsset(GetAssetPath(dataPath), ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
-			AssetDatabase.ImportAsset(atlasAssetPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+			AssetDatabase.ImportAsset(GetAssetPath(atlasPath), ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
 
 			AssetDatabase.SaveAssets();
 			AssetDatabase.Refresh();
