@@ -12,6 +12,7 @@ namespace Miscreant.Aseprite.Editor
     public sealed class AsepriteImporter : ScriptedImporter
     {
 		public const string ATLAS_SUFFIX = "_aseprite";
+		public const string DEFAULT_TARGET_FOLDER = "Miscreant-AsepriteImporterGenerated";
 
 		[SerializeField]
 		private DefaultAsset _targetAtlasDirectory = null;
@@ -40,10 +41,12 @@ namespace Miscreant.Aseprite.Editor
 
 		public override void OnImportAsset(AssetImportContext ctx)
 		{
-			if (_targetAtlasDirectory == null || !AssetDatabase.IsValidFolder(AssetDatabase.GetAssetPath(_targetAtlasDirectory)))
+			string defaultPath = "Assets/" + DEFAULT_TARGET_FOLDER;
+
+			if (!_targetAtlasDirectory  && !AssetDatabase.LoadAssetAtPath<DefaultAsset>(defaultPath))
 			{
-				Debug.LogError("Target atlas directory must be a valid folder under 'Assets'.");
-				return;
+				AssetDatabase.CreateFolder("Assets", DEFAULT_TARGET_FOLDER);
+				AssetDatabase.ImportAsset(defaultPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
 			}
 
 			var fileInfo = new AseFileInfo(ctx.assetPath);
@@ -52,6 +55,18 @@ namespace Miscreant.Aseprite.Editor
 			EditorApplication.delayCall += Delayed;
 			void Delayed()
 			{
+				if (_targetAtlasDirectory == null)
+				{
+					// TODO: Miscreant: Properly apply changes to importer when fields are set via script
+					_targetAtlasDirectory = AssetDatabase.LoadAssetAtPath<DefaultAsset>(defaultPath);
+				}
+
+				if (_targetAtlasDirectory == null || !AssetDatabase.IsValidFolder(AssetDatabase.GetAssetPath(_targetAtlasDirectory)))
+				{
+					Debug.LogError("Target atlas directory must be a valid folder under 'Assets'.");
+					return;
+				}
+
 				EditorApplication.delayCall -= Delayed;
 				GenerateSpriteSheet(fileInfo);
 			}
