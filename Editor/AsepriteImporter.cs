@@ -114,6 +114,10 @@ namespace Miscreant.Aseprite.Editor
 			AssetDatabase.Refresh();
 		}
 
+		/// <summary>
+		/// Runs Aseprite with the given command line interface arguments. <see href="https://www.aseprite.org/docs/cli/">Aseprite Docs</see>.
+		/// </summary>
+		/// <param name="args">Arguments to the CLI.</param>
 		private static void RunAsepriteProcess(params string[] args)
 		{
 			var settings = (Settings)AssetDatabase.LoadAssetAtPath(Settings.PATH, typeof(Settings));
@@ -125,15 +129,19 @@ namespace Miscreant.Aseprite.Editor
 
 			using(Process process = Process.Start(processStartInfo))
 			{
+				process.WaitForExit();
+
 				TryLogStandardOutput(process);
 				TryLogStandardError(process);
 
-				process.WaitForExit();
 				process.Close();
 			}
 		}
 
 		[MenuItem("Miscreant/Aseprite Importer/Validate Aseprite Path")]
+		/// <summary>
+		/// Prints the currently installed version of Aseprite. 
+		/// </summary>
 		public static void CheckAsepriteInstallation()
 		{
 			RunAsepriteProcess(
@@ -142,6 +150,10 @@ namespace Miscreant.Aseprite.Editor
 			);
 		}
 
+		/// <summary>
+		/// Logs the standard output for the given process.
+		/// </summary>
+		/// <param name="process">The external process.</param>
 		private static void TryLogStandardOutput(Process process)
 		{
 			using (StreamReader streamReader = process.StandardOutput)
@@ -154,6 +166,10 @@ namespace Miscreant.Aseprite.Editor
 			}
 		}
 
+		/// <summary>
+		/// Logs the error output of the given process.
+		/// </summary>
+		/// <param name="process">The external procss.</param>
 		private static void TryLogStandardError(Process process)
 		{
 			using (StreamReader streamReader = process.StandardError)
@@ -166,12 +182,27 @@ namespace Miscreant.Aseprite.Editor
 			}
 		}
 
+		/// <summary>
+		/// Given an asset path relative to the project directory, returns the absolute path.
+		/// </summary>
+		/// <param name="assetPath">The project-relative path, beginning with 'Assets'</param>
+		/// <returns>The absolute path.</returns>
 		private static string GetAbsolutePath(string assetPath)
 		{
+			if (assetPath.Substring(0, "Assets".Length) != "Assets")
+			{
+				throw new System.Exception("Path must begin with the project's \"Assets\" directory.");
+			}
+
 			assetPath = assetPath.Substring("Assets".Length);
 			return Application.dataPath + "/" + assetPath;
 		}
 
+		/// <summary>
+		/// Given an absolute path to an asset under the 'Assets' directory, return the path relative to the project.
+		/// </summary>
+		/// <param name="absolutePath">The absolute path to the asset.</param>
+		/// <returns>The project-relative path, beginning with 'Assets'</returns>
 		private static string GetAssetPath(string absolutePath)
 		{
 			if (!absolutePath.Contains(Application.dataPath))
