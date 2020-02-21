@@ -12,7 +12,7 @@ namespace Miscreant.Aseprite.Editor
     public sealed class AsepriteImporter : ScriptedImporter
     {
 		public const string ATLAS_SUFFIX = "_aseprite";
-		public const string DEFAULT_TARGET_FOLDER = "Miscreant-AsepriteImporterGenerated";
+		public const string DEFAULT_TARGET_FOLDER = "(Generated) Miscreant - Aseprite Importer";
 
 		[SerializeField]
 		private DefaultAsset _targetAtlasDirectory = null;
@@ -87,15 +87,15 @@ namespace Miscreant.Aseprite.Editor
 			RunAsepriteProcess(
 				"--batch",
 				"--debug",
-				aseInfo.absolutePath,
+				$"\"{aseInfo.absolutePath}\"",
 				"--filename-format {title}_{tag}-{tagframe}",
 				"--sheet-type packed",
 				"--inner-padding 1", // Add space for the sprites to be extruded by 1px later (no native Aseprite CLI support)
 				"--trim",
-				$"--sheet {atlasPath}",
+				$"--sheet \"{atlasPath}\"",
 				"--list-tags",
 				"--format json-array",
-				$"--data {dataPath}"
+				$"--data \"{dataPath}\""
 			);
 
 			string atlasAssetPath = GetAssetPath(atlasPath);
