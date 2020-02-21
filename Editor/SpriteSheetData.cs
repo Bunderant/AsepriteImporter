@@ -59,6 +59,7 @@ namespace Miscreant.Aseprite.Editor
 			public Rect size;
 			public string scale;
 			public FrameTag[] frameTags;
+			public string animationDirectoryAssetPath;
 		}
 
 		[Serializable]

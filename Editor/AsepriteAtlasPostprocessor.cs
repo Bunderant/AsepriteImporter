@@ -14,14 +14,22 @@ class AsepriteAtlasPostprocessor : AssetPostprocessor // TODO: Miscreant: Move t
 		// On create, it will be empty on the first import, but immediately reimported after the data is added. 
 		if (assetPath.Contains(AsepriteImporter.ATLAS_SUFFIX) && !string.IsNullOrEmpty(assetImporter.userData))
 		{
-			UpdatePackedSprites();
+			SpriteSheetData sheetData = JsonUtility.FromJson<SpriteSheetData>(assetImporter.userData);
+			UpdatePackedSprites(sheetData);
+
+			// Delay animation clip creation to ensure all sprites are established in the asset database. 
+			EditorApplication.delayCall += CreateAnimationClipsDelayed;
+			void CreateAnimationClipsDelayed()
+			{
+				CreateAnimationClips(sheetData);
+				EditorApplication.delayCall -= CreateAnimationClipsDelayed;
+			}
 		}
 	}
 
-	private void UpdatePackedSprites()
+	private void UpdatePackedSprites(SpriteSheetData sheetData)
 	{
 		TextureImporter ti = (TextureImporter)assetImporter;
-		SpriteSheetData sheetData = JsonUtility.FromJson<SpriteSheetData>(ti.userData);
 
 		List<SpriteMetaData> existingSpriteData = new List<SpriteMetaData>(ti.spritesheet);
 		List<SpriteMetaData> newSpriteData = new List<SpriteMetaData>(sheetData.frames.Length);
@@ -66,5 +74,116 @@ class AsepriteAtlasPostprocessor : AssetPostprocessor // TODO: Miscreant: Move t
 		}
 
 		ti.spritesheet = newSpriteData.ToArray();
+	}
+
+	private Dictionary<string, Sprite> GetSpriteLookup()
+	{
+		Object[] spriteObjects = AssetDatabase.LoadAllAssetRepresentationsAtPath(assetPath);
+
+		var spriteLookup = new Dictionary<string, Sprite>(spriteObjects.Length);
+		foreach (var obj in spriteObjects)
+		{
+			if (!(obj is Sprite))
+			{
+				continue;
+			}
+
+			var sprite = (Sprite)obj;
+			spriteLookup.Add(sprite.name, sprite);
+		}
+
+		return spriteLookup;
+	}
+
+	private void CreateAnimationClips(SpriteSheetData sheetData)
+	{
+		string imageName = sheetData.meta.image.Substring(0, sheetData.meta.image.LastIndexOf('.'));
+		string clipDirectoryPath = sheetData.meta.animationDirectoryAssetPath;
+
+		Dictionary<string, Sprite> spriteLookup = GetSpriteLookup();
+		var clipInfoLookup = new Dictionary<string, List<(Sprite sprite, int duration)>>();
+		foreach (SpriteSheetData.FrameTag frameTag in sheetData.meta.frameTags)
+		{
+			var framesInfo = new List<(Sprite sprite, int duration)>();
+
+			for (int i = frameTag.from; i <= frameTag.to; i++)
+			{
+				SpriteSheetData.Frame frame = sheetData.frames[i];
+
+				if (!spriteLookup.ContainsKey(frame.filename))
+				{
+					continue;
+				}
+
+				Sprite sprite = spriteLookup[frame.filename];
+				int duration = frame.duration;
+
+				framesInfo.Add((sprite, duration));
+			}
+
+			string clipName = $"{imageName}_{frameTag.name}";
+			clipInfoLookup.Add(clipName, framesInfo);
+		}
+
+		foreach (var kvp in clipInfoLookup)
+		{
+			string clipName = kvp.Key;
+			List<(Sprite sprite, int duration)> clipInfo = kvp.Value;
+
+			string clipPath = $"{clipDirectoryPath}/{clipName}.anim";
+			var clip = AssetDatabase.LoadAssetAtPath(clipPath, typeof(AnimationClip)) as AnimationClip;
+
+			if (clip == null)
+			{
+				clip = new AnimationClip();
+				clip.wrapMode = WrapMode.Loop;
+				clip.frameRate = 60;
+
+				AnimationClipSettings clipSettings = AnimationUtility.GetAnimationClipSettings(clip);
+				clipSettings.loopTime = true;
+				AnimationUtility.SetAnimationClipSettings(clip, clipSettings);
+
+				AssetDatabase.CreateAsset(clip, clipPath);
+			}
+
+			var spriteBinding = new EditorCurveBinding();
+			spriteBinding.type = typeof(SpriteRenderer);
+			spriteBinding.path = "Renderer"; // TODO: Miscreant: this should be configurable in the importer. 
+			spriteBinding.propertyName = "m_Sprite";
+
+			int clipLength = clipInfo.Count;
+			var keyframes = new List<ObjectReferenceKeyframe>(clipLength + 1);
+
+			float currentDuration = 0f;
+
+			for (int i = 0; i < clipLength; i++)
+			{
+				var keyframe = new ObjectReferenceKeyframe();
+
+				keyframe.value = clipInfo[i].sprite;
+				keyframe.time = currentDuration;
+				keyframes.Add(keyframe);
+
+				// Divide frame duration by 1000 because it is specified by Aseprite in milliseconds. 
+				currentDuration += clipInfo[i].duration / 1000f;
+
+				// Tack on a duplicate of the last keyframe to ensure the last frame gets its full duration
+				if (i == clipLength - 1)
+				{
+					keyframe = new ObjectReferenceKeyframe();
+					keyframe.time = currentDuration;
+					keyframe.value = clipInfo[i].sprite;
+					keyframes.Add(keyframe);
+				}
+			}
+
+			AnimationUtility.SetObjectReferenceCurve(
+				clip,
+				spriteBinding,
+				keyframes.ToArray());
+
+			EditorUtility.SetDirty(clip);
+			// TODO: Miscreant: Make sure the database doesn't need to be refreshed if the clips are modified rather than freshly created. 
+		}
 	}
 }

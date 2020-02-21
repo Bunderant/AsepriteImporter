@@ -12,10 +12,13 @@ namespace Miscreant.Aseprite.Editor
     public sealed class AsepriteImporter : ScriptedImporter
     {
 		public const string ATLAS_SUFFIX = "_aseprite";
-		public const string DEFAULT_TARGET_FOLDER = "(Generated) Miscreant - Aseprite Importer";
+		public const string DEFAULT_ATLAS_FOLDER = "(Generated) Miscreant - Aseprite Atlases";
+		public const string DEFAULT_ANIMATION_FOLDER = "(Generated) Miscreant - Aseprite Animation";
 
 		[SerializeField]
 		private DefaultAsset _targetAtlasDirectory = null;
+		[SerializeField]
+		private DefaultAsset _targetAnimationDirectory = null;
 
 		private struct AseFileInfo
 		{
@@ -41,12 +44,19 @@ namespace Miscreant.Aseprite.Editor
 
 		public override void OnImportAsset(AssetImportContext ctx)
 		{
-			string defaultPath = "Assets/" + DEFAULT_TARGET_FOLDER;
+			string defaultPath = "Assets/" + DEFAULT_ATLAS_FOLDER;
+			string defaultAnimationPath = "Assets/" + DEFAULT_ANIMATION_FOLDER;
 
 			if (!_targetAtlasDirectory  && !AssetDatabase.LoadAssetAtPath<DefaultAsset>(defaultPath))
 			{
-				AssetDatabase.CreateFolder("Assets", DEFAULT_TARGET_FOLDER);
+				AssetDatabase.CreateFolder("Assets", DEFAULT_ATLAS_FOLDER);
 				AssetDatabase.ImportAsset(defaultPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+			}
+
+			if (!_targetAnimationDirectory && !AssetDatabase.LoadAssetAtPath<DefaultAsset>(defaultAnimationPath))
+			{
+				AssetDatabase.CreateFolder("Assets", DEFAULT_ANIMATION_FOLDER);
+				AssetDatabase.ImportAsset(defaultAnimationPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
 			}
 
 			var fileInfo = new AseFileInfo(ctx.assetPath);
@@ -67,8 +77,23 @@ namespace Miscreant.Aseprite.Editor
 					return;
 				}
 
+				if (_targetAnimationDirectory == null)
+				{
+					// TODO: Miscreant: Properly apply changes to importer when fields are set via script
+					_targetAnimationDirectory = AssetDatabase.LoadAssetAtPath<DefaultAsset>(defaultAnimationPath);
+				}
+
+				if (_targetAnimationDirectory == null || !AssetDatabase.IsValidFolder(AssetDatabase.GetAssetPath(_targetAnimationDirectory)))
+				{
+					Debug.LogError("Target animation directory must be a valid folder under 'Assets'.");
+					return;
+				}
+
 				EditorApplication.delayCall -= Delayed;
 				GenerateSpriteSheet(fileInfo);
+
+				// TODO: Miscreant: This shouldn't be done once per import. Wait til everything's been imported. 
+				AssetDatabase.Refresh();
 			}
 		}
 
@@ -104,14 +129,13 @@ namespace Miscreant.Aseprite.Editor
 			AssetDatabase.ImportAsset(atlasAssetPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
 
 			TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(atlasAssetPath);
-			importer.userData = File.ReadAllText(dataPath);
+			SpriteSheetData data = JsonUtility.FromJson<SpriteSheetData>(File.ReadAllText(dataPath));
+			data.meta.animationDirectoryAssetPath = AssetDatabase.GetAssetPath(_targetAnimationDirectory);
+			importer.userData = JsonUtility.ToJson(data);
 			AssetDatabase.WriteImportSettingsIfDirty(atlasAssetPath);
 
 			// Now that we have the JSON data stored elsewhere, delete the temp JSON file. 
 			File.Delete(dataPath);
-			
-			// TODO: Miscreant: This shouldn't be done once per import. Wait til everything's been imported. 
-			AssetDatabase.Refresh();
 		}
 
 		/// <summary>
