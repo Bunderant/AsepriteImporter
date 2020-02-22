@@ -140,7 +140,6 @@ namespace Miscreant.Aseprite.Editor
 				$"\"{aseInfo.absolutePath}\"",
 				"--filename-format {title}_{tag}-{tagframe}",
 				"--sheet-type packed",
-				"--inner-padding 1", // Add space for the sprites to be extruded by 1px later (no native Aseprite CLI support)
 				"--trim",
 				$"--sheet \"{atlasPath}\"",
 				"--list-tags",
