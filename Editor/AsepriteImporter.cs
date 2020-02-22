@@ -9,7 +9,11 @@ namespace Miscreant.Aseprite.Editor
 {
 	using Debug = UnityEngine.Debug;
 
-	[ScriptedImporter(2, new string[] { "aseprite", "ase" } )]
+	#if ASEPRITE_FULL_EXT_ONLY
+	[ScriptedImporter(2, new string[] { "aseprite" }, 10000, AllowCaching = true)]
+	#else
+	[ScriptedImporter(2, new string[] { "ase", "aseprite" }, 10000, AllowCaching = true)]
+	#endif
     public sealed class AsepriteImporter : ScriptedImporter
     {
 		public const string ATLAS_SUFFIX = "_aseprite";
