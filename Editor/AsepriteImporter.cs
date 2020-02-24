@@ -18,19 +18,11 @@ namespace Miscreant.Aseprite.Editor
 	#endif
     public sealed class AsepriteImporter : ScriptedImporter
     {
-		public const string ATLAS_SUFFIX = "_aseprite";
-		public const string DEFAULT_ATLAS_FOLDER = "(Generated) Miscreant - Aseprite Atlases";
-		public const string DEFAULT_ANIMATION_FOLDER = "(Generated) Miscreant - Aseprite Animation";
-
-		[SerializeField]
-		private DefaultAsset _targetAtlasDirectory = null;
-		[SerializeField]
-		private DefaultAsset _targetAnimationDirectory = null;
-
 		[Serializable]
 		public sealed class AseFileInfo
 		{
 			public string absolutePath;
+			public string absoluteDirectoryPath;
 			public string fileName;
 			public string title;
 			public string extension;
@@ -38,11 +30,10 @@ namespace Miscreant.Aseprite.Editor
 
 			public SpriteSheetData spriteSheetData;
 
-			public string defaultClipAssetPath;
-
 			public void Initialize(string asepriteAssetPath)
 			{
 				this.absolutePath = GetAbsolutePath(asepriteAssetPath);
+				this.absoluteDirectoryPath = absolutePath.Substring(0, absolutePath.LastIndexOf('/'));
 				this.fileName = asepriteAssetPath.Substring(asepriteAssetPath.LastIndexOf('/') + 1);
 				this.title = fileName.Substring(0, fileName.LastIndexOf('.'));
 				this.extension = fileName.Substring(title.Length + 1);
@@ -68,69 +59,36 @@ namespace Miscreant.Aseprite.Editor
 			}
 		}
 
+		[SerializeField, HideInInspector]
+		private AsepriteAsset _mainObject;
+		
 		public override void OnImportAsset(AssetImportContext ctx)
 		{
-			string defaultPath = "Assets/" + DEFAULT_ATLAS_FOLDER;
-			string defaultAnimationPath = "Assets/" + DEFAULT_ANIMATION_FOLDER;
-
-			if (!_targetAtlasDirectory  && !AssetDatabase.LoadAssetAtPath<DefaultAsset>(defaultPath))
+			List<Object> existing = new List<Object>();
+			ctx.GetObjects(existing);
+			foreach(var obj in existing)
 			{
-				AssetDatabase.CreateFolder("Assets", DEFAULT_ATLAS_FOLDER);
-				AssetDatabase.ImportAsset(defaultPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+				Object.DestroyImmediate(obj);
 			}
 
-			if (!_targetAnimationDirectory && !AssetDatabase.LoadAssetAtPath<DefaultAsset>(defaultAnimationPath))
-			{
-				AssetDatabase.CreateFolder("Assets", DEFAULT_ANIMATION_FOLDER);
-				AssetDatabase.ImportAsset(defaultAnimationPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
-			}
+			_mainObject = ScriptableObject.CreateInstance<AsepriteAsset>();
+			_mainObject.name = "Main";
+			ctx.AddObjectToAsset(_mainObject.name, _mainObject);
+			ctx.SetMainObject(_mainObject);
 
 			var fileInfo = string.IsNullOrEmpty(userData) ? new AseFileInfo() : JsonUtility.FromJson<AseFileInfo>(userData);
 			fileInfo.Initialize(assetPath);
 
-			// Delay asset generation so we can access the AssetImporter for the newly created atlas. 
-			EditorApplication.delayCall += Delayed;
-			void Delayed()
-			{
-				if (_targetAtlasDirectory == null)
-				{
-					// TODO: Miscreant: Properly apply changes to importer when fields are set via script
-					_targetAtlasDirectory = AssetDatabase.LoadAssetAtPath<DefaultAsset>(defaultPath);
-				}
+			GenerateAssets(fileInfo, ctx);
 
-				if (_targetAtlasDirectory == null || !AssetDatabase.IsValidFolder(AssetDatabase.GetAssetPath(_targetAtlasDirectory)))
-				{
-					Debug.LogError("Target atlas directory must be a valid folder under 'Assets'.");
-					return;
-				}
-
-				if (_targetAnimationDirectory == null)
-				{
-					// TODO: Miscreant: Properly apply changes to importer when fields are set via script
-					_targetAnimationDirectory = AssetDatabase.LoadAssetAtPath<DefaultAsset>(defaultAnimationPath);
-				}
-
-				if (_targetAnimationDirectory == null || !AssetDatabase.IsValidFolder(AssetDatabase.GetAssetPath(_targetAnimationDirectory)))
-				{
-					Debug.LogError("Target animation directory must be a valid folder under 'Assets'.");
-					return;
-				}
-
-				EditorApplication.delayCall -= Delayed;
-				GenerateAssets(fileInfo);
-
-				// TODO: Miscreant: This shouldn't be done once per import. Wait til everything's been imported. 
-				AssetDatabase.Refresh();
-			}
+			// TODO: Miscreant: This shouldn't be done once per import. Wait til everything's been imported. 
+			AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
 		}
 
-		private void GenerateAssets(AseFileInfo aseInfo)
+		private void GenerateAssets(AseFileInfo aseInfo, AssetImportContext ctx)
 		{
-			string atlasDirectoryAssetPath = AssetDatabase.GetAssetPath(_targetAtlasDirectory);
-			string atlasDirectoryAbsolutePath = GetAbsolutePath(atlasDirectoryAssetPath);
-
-			string atlasPath = $"{atlasDirectoryAbsolutePath}/{aseInfo.title}{ATLAS_SUFFIX}.png";
-			string dataPath = $"{atlasDirectoryAbsolutePath}/{aseInfo.title}{ATLAS_SUFFIX}.json";
+			string atlasPath = $"{aseInfo.absoluteDirectoryPath}/{aseInfo.title}_aseprite.png";
+			string dataPath = $"{aseInfo.absoluteDirectoryPath}/{aseInfo.title}_aseprite.json";
 
 			// Create a temporary valid JSON file so Aseprite has something to write into.
 			// The file will be deleted after the json data is transferred to the meta file of the generated atlas. 
@@ -149,28 +107,28 @@ namespace Miscreant.Aseprite.Editor
 				$"--data \"{dataPath}\""
 			);
 
-			string atlasAssetPath = GetAssetPath(atlasPath);
-
-			// Import the atlas immediately so we can access its importer, then store JSON data in its meta file. 
-			AssetDatabase.ImportAsset(atlasAssetPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
-
-			aseInfo.defaultClipAssetPath = AssetDatabase.GetAssetPath(_targetAnimationDirectory);
 			aseInfo.UpdateAsepriteData(JsonUtility.FromJson<SpriteSheetData>(File.ReadAllText(dataPath)));
 
-			TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(atlasAssetPath);
-			importer.userData = JsonUtility.ToJson(aseInfo);
-			AssetDatabase.WriteImportSettingsIfDirty(atlasAssetPath);
+			Texture2D atlasTexture = new Texture2D(aseInfo.spriteSheetData.meta.size.w, aseInfo.spriteSheetData.meta.size.h, TextureFormat.RGBA32, false);
 
-			var atlasImporter = (TextureImporter)AssetImporter.GetAtPath(atlasAssetPath);
-			List<SpriteMetaData> sprites = GetUpdatedSprites(aseInfo, new List<SpriteMetaData>(atlasImporter.spritesheet));
-			atlasImporter.spritesheet = sprites.ToArray();
-			EditorUtility.SetDirty(atlasImporter); // Needed for spritesheet changes to take effect immediately. 
-			AssetDatabase.WriteImportSettingsIfDirty(atlasAssetPath);
+			atlasTexture.LoadImage(File.ReadAllBytes(atlasPath), true);
+			atlasTexture.filterMode = FilterMode.Point;
+			atlasTexture.name = "Atlas";
+			ctx.AddObjectToAsset(atlasTexture.name, atlasTexture);
 
-			AssetDatabase.ImportAsset(atlasAssetPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
-			CreateAnimationClips(aseInfo, GetSpriteLookup(atlasAssetPath));
+			List<Sprite> sprites = CreateSpritesForAtlas(atlasTexture, aseInfo.spriteSheetData);
+			foreach (Sprite sprite in sprites)
+			{
+				ctx.AddObjectToAsset(sprite.name, sprite);
+			}
 
-			// Now that we have all sprite sheet data saved in the meta file, delete its temp JSON file generated by Aseprite. 
+			foreach (AnimationClip clip in CreateAnimationClips(aseInfo, sprites))
+			{
+				ctx.AddObjectToAsset(clip.name, clip);
+			}
+
+			// Now that we have all generated assets saved as sub-objects, delete the temp files created by Aseprite. 
+			File.Delete(atlasPath);
 			File.Delete(dataPath);
 		}
 
@@ -275,50 +233,32 @@ namespace Miscreant.Aseprite.Editor
 			return absolutePath.Remove(0, Application.dataPath.Length - "Assets".Length);
 		}
 
-		private List<SpriteMetaData> GetUpdatedSprites(AseFileInfo aseInfo, List<SpriteMetaData> existingSpriteData)
+		private List<Sprite> CreateSpritesForAtlas(Texture2D atlas, SpriteSheetData sheetData)
 		{
-			List<SpriteMetaData> newSpriteData = new List<SpriteMetaData>(aseInfo.spriteSheetData.frames.Length);
+			var sprites = new List<Sprite>(sheetData.frames.Length);
 
-			int atlasHeight = aseInfo.spriteSheetData.meta.size.h;
-			foreach (SpriteSheetData.Frame frame in aseInfo.spriteSheetData.frames)
+			foreach (SpriteSheetData.Frame frame in sheetData.frames)
 			{
-				var newSprite = new SpriteMetaData();
-
-				int matchIndex = existingSpriteData.FindIndex((sprite) => {
-					return sprite.name.Equals(frame.filename);
-				});
-
-				if (matchIndex >= 0)
-				{
-					var existingSprite = existingSpriteData[matchIndex];
-					
-					newSprite.border = existingSprite.border;
-					newSprite.name = existingSprite.name;
-				}
-				else
-				{
-					newSprite.border = Vector4.zero;
-					newSprite.name = frame.filename;
-				}
-
-				newSprite.alignment = (int)SpriteAlignment.Custom;
-				newSprite.pivot = new Vector2(
+				Vector2 pivot = new Vector2(
 					(frame.sourceSize.w * 0.5f - frame.spriteSourceSize.x) / frame.spriteSourceSize.w,
 					(frame.sourceSize.h * 0.5f - (frame.sourceSize.h - frame.spriteSourceSize.y - frame.spriteSourceSize.h)) / frame.spriteSourceSize.h
 				);
-				
-				var textureRect = frame.GetUnityTextureRect(atlasHeight);
-				newSprite.rect = new Rect(
-					textureRect.x,
-					textureRect.y,
-					textureRect.w,
-					textureRect.h
+
+				UnityEngine.Rect rect = frame.GetUnityTextureRect(sheetData.meta.size.h);
+
+				Sprite sprite = Sprite.Create(
+					atlas,
+					rect,
+					pivot,
+					16
 				);
 
-				newSpriteData.Add(newSprite);
+				sprite.name = frame.filename;
+
+				sprites.Add(sprite);
 			}
 
-			return newSpriteData;
+			return sprites;
 		}
 
 		private Dictionary<string, Sprite> GetSpriteLookup(string atlasAssetPath)
@@ -340,7 +280,7 @@ namespace Miscreant.Aseprite.Editor
 			return spriteLookup;
 		}
 
-		private void CreateAnimationClips(AseFileInfo aseInfo, Dictionary<string, Sprite> spriteLookup)
+		private List<AnimationClip> CreateAnimationClips(AseFileInfo aseInfo, List<Sprite> sprites)
 		{
 			SpriteSheetData sheetData = aseInfo.spriteSheetData;
 
@@ -352,15 +292,14 @@ namespace Miscreant.Aseprite.Editor
 				for (int i = frameTag.from; i <= frameTag.to; i++)
 				{
 					SpriteSheetData.Frame frame = sheetData.frames[i];
+					Sprite sprite = sprites.Find((s) => { return frame.filename.Equals(s.name); });
 
-					if (!spriteLookup.ContainsKey(frame.filename))
+					if (ReferenceEquals(sprite, null))
 					{
 						continue;
 					}
 
-					Sprite sprite = spriteLookup[frame.filename];
 					int duration = frame.duration;
-
 					framesInfo.Add((sprite, duration));
 				}
 
@@ -368,32 +307,25 @@ namespace Miscreant.Aseprite.Editor
 				clipInfoLookup.Add(clipName, framesInfo);
 			}
 
+			var clips = new List<AnimationClip>(clipInfoLookup.Count);
+
 			foreach (var kvp in clipInfoLookup)
 			{
 				string clipName = kvp.Key;
 				List<(Sprite sprite, int duration)> clipInfo = kvp.Value;
 
-				// TODO: should try to load based on the clip's GUID first. 
-				string clipPath = $"{aseInfo.defaultClipAssetPath}/{clipName}.anim";
-				var clip = AssetDatabase.LoadAssetAtPath(clipPath, typeof(AnimationClip)) as AnimationClip;
+				AnimationClip clip = new AnimationClip();
+				clip.wrapMode = WrapMode.Loop;
+				clip.frameRate = 60; // TODO: Miscreant: Should be configurable in the inspector. 
+				clip.name = clipName;
 
-				if (clip == null)
-				{
-					clip = new AnimationClip();
-					clip.wrapMode = WrapMode.Loop;
-					clip.frameRate = 60;
-
-					AnimationClipSettings clipSettings = AnimationUtility.GetAnimationClipSettings(clip);
-					clipSettings.loopTime = true;
-					AnimationUtility.SetAnimationClipSettings(clip, clipSettings);
-
-					AssetDatabase.CreateAsset(clip, clipPath);
-					// TODO: Register this clip's GUID with the importer's AseFileInfo (will require an import to get the GUID from the path).
-				}
+				AnimationClipSettings clipSettings = AnimationUtility.GetAnimationClipSettings(clip);
+				clipSettings.loopTime = true;
+				AnimationUtility.SetAnimationClipSettings(clip, clipSettings);
 
 				var spriteBinding = new EditorCurveBinding();
 				spriteBinding.type = typeof(SpriteRenderer);
-				spriteBinding.path = "Renderer"; // TODO: Miscreant: this should be configurable in the importer. 
+				spriteBinding.path = "Renderer"; // TODO: Miscreant: Should be configurable in the inspector. 
 				spriteBinding.propertyName = "m_Sprite";
 
 				int clipLength = clipInfo.Count;
@@ -425,11 +357,13 @@ namespace Miscreant.Aseprite.Editor
 				AnimationUtility.SetObjectReferenceCurve(
 					clip,
 					spriteBinding,
-					keyframes.ToArray());
+					keyframes.ToArray()
+				);
 
-				EditorUtility.SetDirty(clip);
-				// TODO: Miscreant: Make sure the database doesn't need to be refreshed if the clips are modified rather than freshly created. 
+				clips.Add(clip);
 			}
+
+			return clips;
 		}
     }
 }
