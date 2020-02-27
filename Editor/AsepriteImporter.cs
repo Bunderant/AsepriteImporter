@@ -17,47 +17,6 @@ namespace Miscreant.Aseprite.Editor
 	public sealed class AsepriteImporter : ScriptedImporter
 	{
 		[Serializable]
-		public sealed class AseFileInfo
-		{
-			public string absolutePath;
-			public string absoluteDirectoryPath;
-			public string fileName;
-			public string title;
-			public string extension;
-			public string assetGUID;
-
-			public SpriteSheetData spriteSheetData;
-
-			public void Initialize(string asepriteAssetPath)
-			{
-				this.absolutePath = GetAbsolutePath(asepriteAssetPath);
-				this.absoluteDirectoryPath = absolutePath.Substring(0, absolutePath.LastIndexOf('/'));
-				this.fileName = asepriteAssetPath.Substring(asepriteAssetPath.LastIndexOf('/') + 1);
-				this.title = fileName.Substring(0, fileName.LastIndexOf('.'));
-				this.extension = fileName.Substring(title.Length + 1);
-				this.assetGUID = AssetDatabase.AssetPathToGUID(asepriteAssetPath);
-			}
-
-			public void UpdateAsepriteData(SpriteSheetData newData)
-			{
-				// If the data hasn't initialized yet, just set it directly and return. 
-				if (ReferenceEquals(spriteSheetData, null))
-				{
-					this.spriteSheetData = newData;
-					return;
-				}
-
-				this.spriteSheetData = newData;
-			}
-
-			public override string ToString()
-			{
-				return $"{nameof(AseFileInfo)}:\n\t{nameof(title)}: {title}\n\t{nameof(extension)}: {extension}\n\t{nameof(fileName)}: {fileName}\n" +
-					$"\t{nameof(absolutePath)}: {absolutePath}";
-			}
-		}
-
-		[Serializable]
 		public struct ClipSettings
 		{
 			public enum KeyframeImportMode
@@ -108,7 +67,7 @@ namespace Miscreant.Aseprite.Editor
 			ctx.AddObjectToAsset(_mainObject.name, _mainObject);
 			ctx.SetMainObject(_mainObject);
 
-			var fileInfo = string.IsNullOrEmpty(userData) ? new AseFileInfo() : JsonUtility.FromJson<AseFileInfo>(userData);
+			var fileInfo = string.IsNullOrEmpty(userData) ? new AsepriteFileInfo() : JsonUtility.FromJson<AsepriteFileInfo>(userData);
 			fileInfo.Initialize(assetPath);
 
 			GenerateAssets(fileInfo, ctx);
@@ -117,7 +76,7 @@ namespace Miscreant.Aseprite.Editor
 			AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
 		}
 
-		private void GenerateAssets(AseFileInfo aseInfo, AssetImportContext ctx)
+		private void GenerateAssets(AsepriteFileInfo aseInfo, AssetImportContext ctx)
 		{
 			string atlasPath = $"{aseInfo.absoluteDirectoryPath}/{aseInfo.title}_aseprite.png";
 			string dataPath = $"{aseInfo.absoluteDirectoryPath}/{aseInfo.title}_aseprite.json";
@@ -169,22 +128,6 @@ namespace Miscreant.Aseprite.Editor
 			// Now that we have all generated assets saved as sub-objects, delete the temp files created by Aseprite. 
 			File.Delete(atlasPath);
 			File.Delete(dataPath);
-		}
-
-		/// <summary>
-		/// Given an asset path relative to the project directory, returns the absolute path.
-		/// </summary>
-		/// <param name="assetPath">The project-relative path, beginning with 'Assets'</param>
-		/// <returns>The absolute path.</returns>
-		private static string GetAbsolutePath(string assetPath)
-		{
-			if (assetPath.Substring(0, "Assets".Length) != "Assets")
-			{
-				throw new System.Exception("Path must begin with the project's \"Assets\" directory.");
-			}
-
-			assetPath = assetPath.Substring("Assets".Length);
-			return Application.dataPath + "/" + assetPath;
 		}
 
 		/// <summary>
@@ -251,7 +194,7 @@ namespace Miscreant.Aseprite.Editor
 			return spriteLookup;
 		}
 
-		private List<AnimationClip> CreateAnimationClips(AseFileInfo aseInfo, List<Sprite> sprites)
+		private List<AnimationClip> CreateAnimationClips(AsepriteFileInfo aseInfo, List<Sprite> sprites)
 		{
 			SpriteSheetData sheetData = aseInfo.spriteSheetData;
 
