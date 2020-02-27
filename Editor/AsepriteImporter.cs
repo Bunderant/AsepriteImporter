@@ -71,15 +71,30 @@ namespace Miscreant.Aseprite.Editor
 			[Tooltip("Determines keyframe timing priority.")]
 			public KeyframeImportMode keyframeImportMode;
 
-			[Tooltip("Path from Animator to the SpriteRenderer's GameObject")]
+			[Tooltip("Path from the root Animator to the SpriteRenderer's GameObject.")]
 			public string spriteRendererPath;
+
+			[Tooltip("(Frame Rate) If set too low, could lead to rounding errors for keyframe timing if driven by Aseprite.")]
+			public int sampleRate;
+
+			public static ClipSettings Default
+			{
+				get 
+				{
+					return new ClipSettings {
+						keyframeImportMode = KeyframeImportMode.AsepriteIsMaster,
+						spriteRendererPath = string.Empty,
+						sampleRate = 60
+					};
+				}
+			}
 		}
 
 		[SerializeField, HideInInspector]
 		private AsepriteAsset _mainObject;
 
 		public bool generateAnimationClips;
-		public ClipSettings clipSettings;
+		public ClipSettings clipSettings = ClipSettings.Default;
 
 		public override void OnImportAsset(AssetImportContext ctx)
 		{
@@ -341,7 +356,7 @@ namespace Miscreant.Aseprite.Editor
 
 				AnimationClip clip = new AnimationClip();
 				clip.wrapMode = WrapMode.Loop;
-				clip.frameRate = 60; // TODO: Miscreant: Should be configurable in the inspector. 
+				clip.frameRate = clipSettings.sampleRate; // TODO: Miscreant: Should be configurable in the inspector. 
 				clip.name = clipName;
 
 				AnimationClipSettings currentClipSettings = AnimationUtility.GetAnimationClipSettings(clip);
