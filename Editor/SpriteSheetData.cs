@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace Miscreant.Aseprite.Editor
 {
@@ -16,16 +17,16 @@ namespace Miscreant.Aseprite.Editor
 			public Rect sourceSize;
 			public int duration;
 
-			public Rect GetUnityTextureRect(int textureHeight)
+			public UnityEngine.Rect GetUnityTextureRect(int textureHeight)
 			{
 				int xPad = (frame.w - spriteSourceSize.w) / 2;
 				int yPad = (frame.h - spriteSourceSize.h) / 2;
 
-				return new Rect {
+				return new UnityEngine.Rect {
 					x = frame.x + xPad,
 					y = textureHeight - (frame.y + frame.h - yPad),
-					w = spriteSourceSize.w,
-					h = spriteSourceSize.h
+					width = spriteSourceSize.w,
+					height = spriteSourceSize.h
 				};
 			}
 		}
