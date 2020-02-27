@@ -134,6 +134,7 @@ namespace Miscreant.Aseprite.Editor
 				$"\"{aseInfo.absolutePath}\"",
 				"--filename-format {title}_{tag}-{tagframe}",
 				"--sheet-type packed",
+				"--inner-padding 1",
 				"--trim",
 				$"--sheet \"{atlasPath}\"",
 				"--list-tags",
