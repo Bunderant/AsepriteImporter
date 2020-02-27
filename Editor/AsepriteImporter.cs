@@ -106,6 +106,7 @@ namespace Miscreant.Aseprite.Editor
 			atlasTexture.LoadImage(File.ReadAllBytes(atlasPath), true);
 			atlasTexture.filterMode = FilterMode.Point;
 			atlasTexture.name = "Packed Sprites";
+			atlasTexture.hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy;
 			ctx.AddObjectToAsset(atlasTexture.name, atlasTexture);
 			_mainObject.packedSpriteTexture = atlasTexture;
 
