@@ -113,8 +113,9 @@ namespace Miscreant.Aseprite.Editor
 
 			atlasTexture.LoadImage(File.ReadAllBytes(atlasPath), true);
 			atlasTexture.filterMode = FilterMode.Point;
-			atlasTexture.name = "Atlas";
+			atlasTexture.name = "Packed Sprites";
 			ctx.AddObjectToAsset(atlasTexture.name, atlasTexture);
+			_mainObject.packedSpriteTexture = atlasTexture;
 
 			List<Sprite> sprites = CreateSpritesForAtlas(atlasTexture, aseInfo.spriteSheetData);
 			foreach (Sprite sprite in sprites)
@@ -122,9 +123,11 @@ namespace Miscreant.Aseprite.Editor
 				ctx.AddObjectToAsset(sprite.name, sprite);
 			}
 
+			_mainObject.clipCount = 0;
 			foreach (AnimationClip clip in CreateAnimationClips(aseInfo, sprites))
 			{
 				ctx.AddObjectToAsset(clip.name, clip);
+				_mainObject.clipCount++;
 			}
 
 			// Now that we have all generated assets saved as sub-objects, delete the temp files created by Aseprite. 
