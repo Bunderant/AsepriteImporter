@@ -11,13 +11,13 @@ namespace Miscreant.Aseprite.Editor
 	using Debug = UnityEngine.Debug;
 	using Object = UnityEngine.Object;
 
-	#if ASEPRITE_FULL_EXT_ONLY
+#if ASEPRITE_FULL_EXT_ONLY
 	[ScriptedImporter(3, new string[] { "aseprite" }, 10000, AllowCaching = true)]
-	#else
+#else
 	[ScriptedImporter(3, new string[] { "ase", "aseprite" }, 10000, AllowCaching = true)]
-	#endif
-    public sealed class AsepriteImporter : ScriptedImporter
-    {
+#endif
+	public sealed class AsepriteImporter : ScriptedImporter
+	{
 		[Serializable]
 		public sealed class AseFileInfo
 		{
@@ -54,19 +54,38 @@ namespace Miscreant.Aseprite.Editor
 
 			public override string ToString()
 			{
-				return $"{nameof(AseFileInfo)}:\n\t{nameof(title)}: {title}\n\t{nameof(extension)}: {extension}\n\t{nameof(fileName)}: {fileName}\n" + 
+				return $"{nameof(AseFileInfo)}:\n\t{nameof(title)}: {title}\n\t{nameof(extension)}: {extension}\n\t{nameof(fileName)}: {fileName}\n" +
 					$"\t{nameof(absolutePath)}: {absolutePath}";
 			}
 		}
 
+		[Serializable]
+		public struct ClipSettings
+		{
+			public enum KeyframeImportMode
+			{
+				AsepriteIsMaster,   // Aseprite has full control, and will overwrite keyframe timing for SpriteRenderer properties. 
+				UnityIsMaster       // New/deleted frames from Aseprite will be added/removed without altering existing keyframe positions. 
+			}
+
+			[Tooltip("Determines keyframe timing priority.")]
+			public KeyframeImportMode keyframeImportMode;
+
+			[Tooltip("Path from Animator to the SpriteRenderer's GameObject")]
+			public string spriteRendererPath;
+		}
+
 		[SerializeField, HideInInspector]
 		private AsepriteAsset _mainObject;
-		
+
+		public bool generateAnimationClips;
+		public ClipSettings clipSettings;
+
 		public override void OnImportAsset(AssetImportContext ctx)
 		{
 			List<Object> existing = new List<Object>();
 			ctx.GetObjects(existing);
-			foreach(var obj in existing)
+			foreach (var obj in existing)
 			{
 				Object.DestroyImmediate(obj);
 			}
@@ -124,10 +143,13 @@ namespace Miscreant.Aseprite.Editor
 			}
 
 			_mainObject.clipCount = 0;
-			foreach (AnimationClip clip in CreateAnimationClips(aseInfo, sprites))
+			if (generateAnimationClips)
 			{
-				ctx.AddObjectToAsset(clip.name, clip);
-				_mainObject.clipCount++;
+				foreach (AnimationClip clip in CreateAnimationClips(aseInfo, sprites))
+				{
+					ctx.AddObjectToAsset(clip.name, clip);
+					_mainObject.clipCount++;
+				}
 			}
 
 			// Now that we have all generated assets saved as sub-objects, delete the temp files created by Aseprite. 
@@ -148,7 +170,7 @@ namespace Miscreant.Aseprite.Editor
 			processStartInfo.RedirectStandardError = true;
 			processStartInfo.UseShellExecute = false; // Required to be set to 'false' to read output.
 
-			using(Process process = Process.Start(processStartInfo))
+			using (Process process = Process.Start(processStartInfo))
 			{
 				process.WaitForExit();
 
@@ -322,13 +344,13 @@ namespace Miscreant.Aseprite.Editor
 				clip.frameRate = 60; // TODO: Miscreant: Should be configurable in the inspector. 
 				clip.name = clipName;
 
-				AnimationClipSettings clipSettings = AnimationUtility.GetAnimationClipSettings(clip);
-				clipSettings.loopTime = true;
-				AnimationUtility.SetAnimationClipSettings(clip, clipSettings);
+				AnimationClipSettings currentClipSettings = AnimationUtility.GetAnimationClipSettings(clip);
+				currentClipSettings.loopTime = true;
+				AnimationUtility.SetAnimationClipSettings(clip, currentClipSettings);
 
 				var spriteBinding = new EditorCurveBinding();
 				spriteBinding.type = typeof(SpriteRenderer);
-				spriteBinding.path = "Renderer"; // TODO: Miscreant: Should be configurable in the inspector. 
+				spriteBinding.path = clipSettings.spriteRendererPath;
 				spriteBinding.propertyName = "m_Sprite";
 
 				int clipLength = clipInfo.Count;
