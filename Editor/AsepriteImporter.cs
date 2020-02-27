@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using UnityEditor;
-using System.Diagnostics;
 using UnityEditor.Experimental.AssetImporters;
 using System.IO;
 using System;
@@ -8,7 +7,6 @@ using System.Collections.Generic;
 
 namespace Miscreant.Aseprite.Editor
 {
-	using Debug = UnityEngine.Debug;
 	using Object = UnityEngine.Object;
 
 #if ASEPRITE_FULL_EXT_ONLY
@@ -128,7 +126,7 @@ namespace Miscreant.Aseprite.Editor
 			// The file will be deleted after the json data is transferred to the meta file of the generated atlas. 
 			File.WriteAllText(dataPath, "{}");
 
-			RunAsepriteProcess(
+			AsepriteCLI.Run(
 				"--batch",
 				"--debug",
 				$"\"{aseInfo.absolutePath}\"",
@@ -171,74 +169,6 @@ namespace Miscreant.Aseprite.Editor
 			// Now that we have all generated assets saved as sub-objects, delete the temp files created by Aseprite. 
 			File.Delete(atlasPath);
 			File.Delete(dataPath);
-		}
-
-		/// <summary>
-		/// Runs Aseprite with the given command line interface arguments. <see href="https://www.aseprite.org/docs/cli/">Aseprite Docs</see>.
-		/// </summary>
-		/// <param name="args">Arguments to the CLI.</param>
-		private static void RunAsepriteProcess(params string[] args)
-		{
-			var settings = (Settings)AssetDatabase.LoadAssetAtPath(Settings.PATH, typeof(Settings));
-			var processStartInfo = new ProcessStartInfo(settings.asepritePath, string.Join(" ", args));
-
-			processStartInfo.RedirectStandardOutput = true;
-			processStartInfo.RedirectStandardError = true;
-			processStartInfo.UseShellExecute = false; // Required to be set to 'false' to read output.
-
-			using (Process process = Process.Start(processStartInfo))
-			{
-				process.WaitForExit();
-
-				TryLogStandardOutput(process);
-				TryLogStandardError(process);
-
-				process.Close();
-			}
-		}
-
-		[MenuItem("Miscreant/Aseprite Importer/Validate Aseprite Path")]
-		/// <summary>
-		/// Prints the currently installed version of Aseprite. 
-		/// </summary>
-		public static void CheckAsepriteInstallation()
-		{
-			RunAsepriteProcess(
-				"--batch",
-				"--version"
-			);
-		}
-
-		/// <summary>
-		/// Logs the standard output for the given process.
-		/// </summary>
-		/// <param name="process">The external process.</param>
-		private static void TryLogStandardOutput(Process process)
-		{
-			using (StreamReader streamReader = process.StandardOutput)
-			{
-				string output = streamReader.ReadToEnd();
-				if (!string.IsNullOrEmpty(output))
-				{
-					Debug.Log(output);
-				}
-			}
-		}
-
-		/// <summary>
-		/// Logs the error output of the given process.
-		/// </summary>
-		/// <param name="process">The external procss.</param>
-		private static void TryLogStandardError(Process process)
-		{
-			using (StreamReader streamReader = process.StandardError)
-			{
-				string output = streamReader.ReadToEnd();
-				if (!string.IsNullOrEmpty(output))
-				{
-					Debug.LogError(output);
-				}
-			}
 		}
 
 		/// <summary>
