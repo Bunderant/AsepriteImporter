@@ -71,9 +71,6 @@ namespace Miscreant.Aseprite.Editor
 			fileInfo.Initialize(assetPath);
 
 			GenerateAssets(fileInfo, ctx);
-
-			// TODO: Miscreant: This shouldn't be done once per import. Wait til everything's been imported. 
-			AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
 		}
 
 		private void GenerateAssets(AsepriteFileInfo aseInfo, AssetImportContext ctx)
