@@ -47,25 +47,17 @@ namespace Miscreant.Aseprite.Editor
 			}
 		}
 
-		[SerializeField, HideInInspector]
-		private AsepriteAsset _mainObject;
-
 		public bool generateAnimationClips;
 		public ClipSettings clipSettings = ClipSettings.Default;
 
+		public Texture2D packedSpriteTexture;
+		public int clipCount;
+
 		public override void OnImportAsset(AssetImportContext ctx)
 		{
-			List<Object> existing = new List<Object>();
-			ctx.GetObjects(existing);
-			foreach (var obj in existing)
-			{
-				Object.DestroyImmediate(obj);
-			}
-
-			_mainObject = ScriptableObject.CreateInstance<AsepriteAsset>();
-			_mainObject.name = "Main";
-			ctx.AddObjectToAsset(_mainObject.name, _mainObject);
-			ctx.SetMainObject(_mainObject);
+			var main = ScriptableObject.CreateInstance<AsepriteAsset>();
+			ctx.AddObjectToAsset("Main", main, main.icon);
+			ctx.SetMainObject(main);
 
 			var fileInfo = string.IsNullOrEmpty(userData) ? new AsepriteFileInfo() : JsonUtility.FromJson<AsepriteFileInfo>(userData);
 			fileInfo.Initialize(assetPath);
@@ -105,7 +97,7 @@ namespace Miscreant.Aseprite.Editor
 			atlasTexture.name = "Packed Sprites";
 			atlasTexture.hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy;
 			ctx.AddObjectToAsset(atlasTexture.name, atlasTexture);
-			_mainObject.packedSpriteTexture = atlasTexture;
+			packedSpriteTexture = atlasTexture;
 
 			List<Sprite> sprites = CreateSpritesForAtlas(atlasTexture, aseInfo.spriteSheetData);
 			foreach (Sprite sprite in sprites)
@@ -113,13 +105,13 @@ namespace Miscreant.Aseprite.Editor
 				ctx.AddObjectToAsset(sprite.name, sprite);
 			}
 
-			_mainObject.clipCount = 0;
+			clipCount = 0;
 			if (generateAnimationClips)
 			{
 				foreach (AnimationClip clip in CreateAnimationClips(aseInfo, sprites))
 				{
 					ctx.AddObjectToAsset(clip.name, clip);
-					_mainObject.clipCount++;
+					clipCount++;
 				}
 			}
 

@@ -1,3 +1,4 @@
+using UnityEngine;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 
@@ -7,6 +8,11 @@ namespace Miscreant.Aseprite.Editor
 	[CanEditMultipleObjects]
 	public class AsepriteImporterEditor : ScriptedImporterEditor
 	{
+		protected override bool useAssetDrawPreview
+		{
+			get { return false; }
+		}
+
 		public override void OnInspectorGUI()
 		{
 			serializedObject.Update();
@@ -33,6 +39,24 @@ namespace Miscreant.Aseprite.Editor
 
 			serializedObject.ApplyModifiedProperties();
 			base.ApplyRevertGUI();
+		}
+
+		public override bool HasPreviewGUI()
+		{
+			return ((AsepriteImporter)target).packedSpriteTexture != null;
+		}
+
+		public override void OnPreviewGUI(Rect r, GUIStyle background)
+		{
+			var importer = (AsepriteImporter)target;
+
+			Texture2D texture = importer.packedSpriteTexture;
+
+			GUI.DrawTexture(r, texture, ScaleMode.ScaleToFit);
+			EditorGUI.DropShadowLabel(
+				r, 
+				$"Packed Size: {texture.width}x{texture.height} - Animation Clips: {importer.clipCount}"
+			);
 		}
 	}
 }
