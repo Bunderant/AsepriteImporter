@@ -10,12 +10,16 @@ namespace Miscreant.Aseprite.Editor
 	using Object = UnityEngine.Object;
 
 #if ASEPRITE_FULL_EXT_ONLY
-	[ScriptedImporter(3, new string[] { "aseprite" }, 10000, AllowCaching = true)]
+	[ScriptedImporter(AsepriteImporter.VERSION, new string[] { "aseprite" }, AsepriteImporter.QUEUE_OFFSET, AllowCaching = AsepriteImporter.IS_CACHING_ALLOWED)]
 #else
-	[ScriptedImporter(3, new string[] { "ase", "aseprite" }, 10000, AllowCaching = true)]
+	[ScriptedImporter(AsepriteImporter.VERSION, new string[] { "ase", "aseprite" }, AsepriteImporter.QUEUE_OFFSET, AllowCaching = AsepriteImporter.IS_CACHING_ALLOWED)]
 #endif
 	public sealed class AsepriteImporter : ScriptedImporter
 	{
+		public const int VERSION = 4;
+		public const int QUEUE_OFFSET = 10000;
+		public const bool IS_CACHING_ALLOWED = true;
+
 		[Serializable]
 		public struct ClipSettings
 		{
