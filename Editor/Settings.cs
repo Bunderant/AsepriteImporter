@@ -10,5 +10,16 @@ namespace Miscreant.Aseprite.Editor
 		[SerializeField]
 		private string _asepritePath = null;
 		public string asepritePath { get { return _asepritePath; } }
+
+		[SerializeField]
+		private Texture2D _icon = null;
+		
+		[SerializeField]
+		private Texture2D _iconWithClips = null;
+
+		public Texture2D GetIcon(bool importerGeneratesAnimationClips)
+		{
+			return importerGeneratesAnimationClips ? _iconWithClips : _icon;
+		}
 	}
 }
