@@ -56,7 +56,7 @@ namespace Miscreant.Aseprite.Editor
 		public override void OnImportAsset(AssetImportContext ctx)
 		{
 			var main = ScriptableObject.CreateInstance<AsepriteAsset>();
-			ctx.AddObjectToAsset("Main", main, main.icon);
+			ctx.AddObjectToAsset("Main", main, main.GetIcon(generateAnimationClips));
 			ctx.SetMainObject(main);
 
 			var fileInfo = string.IsNullOrEmpty(userData) ? new AsepriteFileInfo() : JsonUtility.FromJson<AsepriteFileInfo>(userData);

@@ -6,6 +6,13 @@ namespace Miscreant.Aseprite.Editor
 	{
 		[SerializeField]
 		private Texture2D _icon = null;
-		public Texture2D icon { get { return _icon; } }	
+		
+		[SerializeField]
+		private Texture2D _iconWithClips = null;
+
+		public Texture2D GetIcon(bool importerGeneratesAnimationClips)
+		{
+			return importerGeneratesAnimationClips ? _iconWithClips : _icon;
+		}
 	}
 }
