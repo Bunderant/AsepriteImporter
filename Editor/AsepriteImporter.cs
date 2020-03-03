@@ -20,39 +20,10 @@ namespace Miscreant.Aseprite.Editor
 		public const int QUEUE_OFFSET = 10000;
 		public const bool IS_CACHING_ALLOWED = true;
 
-		[Serializable]
-		public struct ClipSettings
-		{
-			public enum KeyframeImportMode
-			{
-				AsepriteIsMaster,   // Aseprite has full control, and will overwrite keyframe timing for SpriteRenderer properties. 
-				UnityIsMaster       // New/deleted frames from Aseprite will be added/removed without altering existing keyframe positions. 
-			}
-
-			[Tooltip("Determines keyframe timing priority.")]
-			public KeyframeImportMode keyframeImportMode;
-
-			[Tooltip("Path from the root Animator to the SpriteRenderer's GameObject.")]
-			public string spriteRendererPath;
-
-			[Tooltip("(Frame Rate) If set too low, could lead to rounding errors for keyframe timing if driven by Aseprite.")]
-			public int sampleRate;
-
-			public static ClipSettings Default
-			{
-				get 
-				{
-					return new ClipSettings {
-						keyframeImportMode = KeyframeImportMode.AsepriteIsMaster,
-						spriteRendererPath = string.Empty,
-						sampleRate = 60
-					};
-				}
-			}
-		}
-
 		public bool generateAnimationClips;
 		public ClipSettings clipSettings = ClipSettings.Default;
+
+		public MergedClip[] mergeTargetClips;
 
 		public Texture2D packedSpriteTexture;
 		public int clipCount;

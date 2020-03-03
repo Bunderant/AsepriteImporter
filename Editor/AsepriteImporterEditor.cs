@@ -1,16 +1,68 @@
 using UnityEngine;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEditor.Experimental.AssetImporters;
 
 namespace Miscreant.Aseprite.Editor
 {
 	[CustomEditor(typeof(AsepriteImporter))]
 	[CanEditMultipleObjects]
-	public class AsepriteImporterEditor : ScriptedImporterEditor
+	public sealed class AsepriteImporterEditor : ScriptedImporterEditor
 	{
+		private ReorderableList _mergeTargetsList;
+
 		protected override bool useAssetDrawPreview
 		{
 			get { return false; }
+		}
+
+		public override void OnEnable()
+		{
+			base.OnEnable();
+
+			var mergeTargetsProp = serializedObject.FindProperty("mergeTargetClips");
+
+			_mergeTargetsList = new ReorderableList(
+				serializedObject,
+				mergeTargetsProp,
+				true,
+				true,
+				true,
+				true
+			);
+
+			_mergeTargetsList.elementHeightCallback = (
+				index =>
+				{
+					return EditorGUI.GetPropertyHeight(_mergeTargetsList.serializedProperty.GetArrayElementAtIndex(index));
+				}
+			);
+
+			_mergeTargetsList.drawHeaderCallback = (
+				rect =>
+				{
+					EditorGUI.LabelField(rect, "Merge Target Clips", EditorStyles.boldLabel);
+				}
+			);
+
+			_mergeTargetsList.drawElementCallback = (
+				(Rect rect, int index, bool isActive, bool isFocused) =>
+				{
+					var element = _mergeTargetsList.serializedProperty.GetArrayElementAtIndex(index);
+					EditorGUI.PropertyField(
+						rect,
+						element,
+						GUIContent.none
+					);
+				}
+			);
+
+			_mergeTargetsList.onChangedCallback = (
+				rect =>
+				{
+					Debug.LogWarning("TODO: Miscreant: Make sure selected clip is not a subasset of this object (crashes editor on import).");
+				}
+			);
 		}
 
 		public override void OnInspectorGUI()
@@ -26,10 +78,13 @@ namespace Miscreant.Aseprite.Editor
 			bool shouldGenerateClips = EditorGUILayout.Toggle("Generates Animation Clips", importer.generateAnimationClips);
 
 			EditorGUI.BeginDisabledGroup(!shouldGenerateClips);
-			EditorGUI.indentLevel++;
-			EditorGUILayout.PropertyField(clipSettingsProp);
-			EditorGUI.indentLevel--;
-			EditorGUI.EndDisabledGroup();		
+			EditorGUILayout.PropertyField(clipSettingsProp, new GUIContent("Default Clip Settings"));
+			EditorGUI.EndDisabledGroup();
+			
+			if (shouldGenerateClips && importer.clipSettings.createMode != ClipSettings.CreateMode.CreateNewAsset)
+			{
+				_mergeTargetsList.DoLayoutList();
+			}
 
 			if (EditorGUI.EndChangeCheck())
 			{
@@ -54,7 +109,7 @@ namespace Miscreant.Aseprite.Editor
 
 			GUI.DrawTexture(r, texture, ScaleMode.ScaleToFit);
 			EditorGUI.DropShadowLabel(
-				r, 
+				r,
 				$"Packed Size: {texture.width}x{texture.height} - Animation Clips: {importer.clipCount}"
 			);
 		}
