@@ -15,6 +15,7 @@ namespace Miscreant.Aseprite.Editor
 
 			pos.y += EditorGUIUtility.standardVerticalSpacing;
 
+			EditorGUI.BeginChangeCheck();
 			EditorGUI.PropertyField(
 				new Rect(
 					pos.x,
@@ -24,6 +25,25 @@ namespace Miscreant.Aseprite.Editor
 				),
 				clipProp
 			);
+
+			if (EditorGUI.EndChangeCheck())
+			{
+				var clip = (AnimationClip)clipProp.objectReferenceValue;
+				if (clip != null && AssetDatabase.IsSubAsset(clip))
+				{
+					string mainAssetPath = AssetDatabase.GetAssetPath(clipProp.objectReferenceValue);
+					var clipImporter = AssetImporter.GetAtPath(mainAssetPath);
+					if (clipImporter is AsepriteImporter)
+					{
+						Debug.LogWarning(
+							$"Cannot merge into clips that are Aseprite subassets: {clip.name}",
+							clipProp.objectReferenceValue
+						);
+
+						clipProp.objectReferenceValue = null;
+					}
+				}
+			}
 
 			pos.y += EditorGUIUtility.standardVerticalSpacing;
 
