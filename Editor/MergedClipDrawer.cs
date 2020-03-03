@@ -16,6 +16,10 @@ namespace Miscreant.Aseprite.Editor
 			pos.y += EditorGUIUtility.standardVerticalSpacing;
 
 			EditorGUI.BeginChangeCheck();
+
+			// Cache the previous clip to be reverted in case an invalid assignment is attempted.
+			var previousClip = (AnimationClip)clipProp.objectReferenceValue;
+
 			EditorGUI.PropertyField(
 				new Rect(
 					pos.x,
@@ -28,6 +32,7 @@ namespace Miscreant.Aseprite.Editor
 
 			if (EditorGUI.EndChangeCheck())
 			{
+				// Revert the clip assignment if it was an invalid selection.
 				var clip = (AnimationClip)clipProp.objectReferenceValue;
 				if (clip != null && AssetDatabase.IsSubAsset(clip))
 				{
@@ -40,7 +45,7 @@ namespace Miscreant.Aseprite.Editor
 							clipProp.objectReferenceValue
 						);
 
-						clipProp.objectReferenceValue = null;
+						clipProp.objectReferenceValue = previousClip;
 					}
 				}
 			}
