@@ -48,12 +48,22 @@ namespace Miscreant.Aseprite.Editor
 
 			EditorGUI.BeginDisabledGroup(!shouldGenerateClips);
 
-			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+			GUIStyle helpBoxStyle = new GUIStyle(EditorStyles.helpBox);
+			helpBoxStyle.padding.bottom += 4; // Add to the padding to make the text align more nicely. 
+
+			EditorGUILayout.BeginVertical(helpBoxStyle);
 
 			EditorGUILayout.BeginHorizontal();
 			EditorGUILayout.Space(12, false); // Gross code to force the foldout to be indented within the box bounds. 
-			_bIsClipSettingsOpen = EditorGUILayout.BeginFoldoutHeaderGroup(_bIsClipSettingsOpen && shouldGenerateClips, "Clip Settings");
-			EditorGUILayout.Space(2, false); 
+
+			GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout);
+			foldoutStyle.fontStyle = FontStyle.Bold;
+			_bIsClipSettingsOpen = EditorGUILayout.BeginFoldoutHeaderGroup(
+				_bIsClipSettingsOpen && shouldGenerateClips,
+				"Clip Settings", foldoutStyle
+			);
+
+			EditorGUILayout.Space(2, false); // End of foldout indent hackery. 
 			EditorGUILayout.EndHorizontal();
 
 			if (_bIsClipSettingsOpen)
@@ -112,7 +122,7 @@ namespace Miscreant.Aseprite.Editor
 			);
 
 			_generatedClipList.drawHeaderCallback = (
-				rect => { EditorGUI.LabelField(rect, "Generated Clips", EditorStyles.boldLabel); }
+				rect => { EditorGUI.LabelField(rect, $"Tagged Clips ({_generatedClipList.count})", EditorStyles.boldLabel); }
 			);
 
 			_generatedClipList.drawElementCallback = (

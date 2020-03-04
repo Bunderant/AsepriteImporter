@@ -12,8 +12,6 @@ namespace Miscreant.Aseprite.Editor
 
 			EditorGUI.BeginProperty(pos, label, property);
 
-			pos.y += EditorGUIUtility.standardVerticalSpacing;
-
 			EditorGUI.PropertyField(
 				new Rect(
 					pos.x,

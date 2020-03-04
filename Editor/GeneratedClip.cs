@@ -13,6 +13,9 @@ namespace Miscreant.Aseprite.Editor
 			SubassetAndMergeExisting
 		}
 
+		[Tooltip("Name of the associated Aseprite tag.")]
+		public string name;
+
 		[Tooltip("Determines whether new clips are created, keyframes are merged into existing clips, or both.")]
 		public CreateMode createMode;
 
@@ -25,18 +28,15 @@ namespace Miscreant.Aseprite.Editor
 		[Tooltip("List of clips to merge the generated SpriteRenderer keyframes into.")]
 		public MergedClip[] mergeTargetClips;
 
-		public static GeneratedClip Default
+		public static GeneratedClip Create(string name, AnimationClip generatedClip)
 		{
-			get
+			return new GeneratedClip()
 			{
-				return new GeneratedClip()
-				{
-					createMode = CreateMode.SubassetOnly,
-					rendererPathOverride = string.Empty,
-					clip = null,
-					mergeTargetClips = new MergedClip[] { MergedClip.Default } // Include one so the user doesn't have to add it manually 
-				};
-			}
+				name = name,
+				rendererPathOverride = string.Empty,
+				clip = generatedClip,
+				mergeTargetClips = new MergedClip[] { MergedClip.Default } // Include one so the user doesn't have to add it manually 
+			};
 		}
 	}
 }

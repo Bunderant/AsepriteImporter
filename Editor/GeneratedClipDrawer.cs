@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditorInternal;
 using UnityEditor;
+using System.Collections.Generic;
 
 namespace Miscreant.Aseprite.Editor
 {
@@ -10,12 +11,14 @@ namespace Miscreant.Aseprite.Editor
 	public sealed class GeneratedClipDrawer : PropertyDrawer
 	{
 		private bool _isInitialized;
+		private Dictionary<string, bool> _foldoutLookup;
 
 		private ReorderableList _mergeTargetsList;
 
 		private void Initialize(SerializedProperty serializedProperty)
 		{
 			InitializeMergeTargetsList(serializedProperty);
+			_foldoutLookup = new Dictionary<string, bool>();
 
 			_isInitialized = true;
 		}
@@ -57,6 +60,7 @@ namespace Miscreant.Aseprite.Editor
 				Initialize(property);
 			}
 
+			var nameProp = property.FindPropertyRelative("name");
 			var createModeProp = property.FindPropertyRelative("createMode");
 			var clipProp = property.FindPropertyRelative("clip");
 			var rendererPathProp = property.FindPropertyRelative("rendererPathOverride");
@@ -65,22 +69,32 @@ namespace Miscreant.Aseprite.Editor
 
 			pos.y += EditorGUIUtility.standardVerticalSpacing;
 
-			EditorGUI.PropertyField(
+			GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout);
+			foldoutStyle.fontStyle = FontStyle.Bold;
+
+			_foldoutLookup.TryGetValue(nameProp.stringValue, out bool isFoldoutOpen);
+			_foldoutLookup[nameProp.stringValue] = EditorGUI.Foldout(
 				new Rect(
-					pos.x,
+					pos.x + 10, // Accounts for foldout arrow indentation.
 					pos.y,
-					pos.width,
+					pos.width - 20, // Accounts for foldout arrow indentation.
 					EditorGUIUtility.singleLineHeight
 				),
-				createModeProp
+				isFoldoutOpen,
+				nameProp.stringValue,
+				true,
+				foldoutStyle
 			);
 
 			pos.y += EditorGUIUtility.standardVerticalSpacing;
 			pos.y += EditorGUIUtility.singleLineHeight;
 
-			if (createModeProp.enumValueIndex != (int)CreateMode.MergeIntoExistingOnly)
+			if (isFoldoutOpen)
 			{
-				EditorGUI.BeginDisabledGroup(true);
+				// Indent everything within the foldout scope.
+				pos.x += 10;
+				pos.xMax -= 10;
+
 				EditorGUI.PropertyField(
 					new Rect(
 						pos.x,
@@ -88,39 +102,56 @@ namespace Miscreant.Aseprite.Editor
 						pos.width,
 						EditorGUIUtility.singleLineHeight
 					),
-					clipProp,
-					new GUIContent("Clip Subasset")
+					createModeProp
 				);
-
-				EditorGUI.EndDisabledGroup();
 
 				pos.y += EditorGUIUtility.standardVerticalSpacing;
 				pos.y += EditorGUIUtility.singleLineHeight;
-			}
 
-			EditorGUI.PropertyField(
-				new Rect(
-					pos.x,
-					pos.y,
-					pos.width,
-					EditorGUIUtility.singleLineHeight
-				),
-				rendererPathProp
-			);
+				if (createModeProp.enumValueIndex != (int)CreateMode.MergeIntoExistingOnly)
+				{
+					EditorGUI.BeginDisabledGroup(true);
+					EditorGUI.PropertyField(
+						new Rect(
+							pos.x,
+							pos.y,
+							pos.width,
+							EditorGUIUtility.singleLineHeight
+						),
+						clipProp,
+						new GUIContent("Clip Subasset")
+					);
 
-			pos.y += EditorGUIUtility.standardVerticalSpacing;
-			pos.y += EditorGUIUtility.singleLineHeight;
+					EditorGUI.EndDisabledGroup();
 
-			if (createModeProp.enumValueIndex != (int)CreateMode.SubassetOnly)
-			{
-				_mergeTargetsList.DoList(
+					pos.y += EditorGUIUtility.standardVerticalSpacing;
+					pos.y += EditorGUIUtility.singleLineHeight;
+				}
+
+				EditorGUI.PropertyField(
 					new Rect(
 						pos.x,
 						pos.y,
 						pos.width,
-						_mergeTargetsList.GetHeight()
-					)
+						EditorGUIUtility.singleLineHeight
+					),
+					rendererPathProp
 				);
+
+				pos.y += EditorGUIUtility.standardVerticalSpacing;
+				pos.y += EditorGUIUtility.singleLineHeight;
+
+				if (createModeProp.enumValueIndex != (int)CreateMode.SubassetOnly)
+				{
+					_mergeTargetsList.DoList(
+						new Rect(
+							pos.x,
+							pos.y,
+							pos.width,
+							_mergeTargetsList.GetHeight()
+						)
+					);
+				}
 			}
 
 			EditorGUI.EndProperty();
@@ -133,7 +164,14 @@ namespace Miscreant.Aseprite.Editor
 				Initialize(property);
 			}
 
-			float height = EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing * 3;
+			var nameProp = property.FindPropertyRelative("name");
+			_foldoutLookup.TryGetValue(nameProp.stringValue, out bool isFoldoutOpen);
+			if (!isFoldoutOpen)
+			{
+				return EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2;
+			}
+
+			float height = EditorGUIUtility.singleLineHeight * 3 + EditorGUIUtility.standardVerticalSpacing * 4;
 
 			var createModeProp = property.FindPropertyRelative("createMode");
 			var createMode = (CreateMode)createModeProp.enumValueIndex;

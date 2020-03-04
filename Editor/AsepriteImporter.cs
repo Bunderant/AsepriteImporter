@@ -90,10 +90,7 @@ namespace Miscreant.Aseprite.Editor
 				for (int i = 0; i < clipCount; i++)
 				{
 					AnimationClip clip = clips[i];
-					GeneratedClip generatedClip = GeneratedClip.Default;
-					generatedClip.clip = clip;
-
-					generatedClips[i] = generatedClip;
+					generatedClips[i] = GeneratedClip.Create(aseInfo.spriteSheetData.meta.frameTags[i].name, clip);
 					
 					ctx.AddObjectToAsset(clip.name, clip);
 				}
