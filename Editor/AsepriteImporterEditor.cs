@@ -10,7 +10,6 @@ namespace Miscreant.Aseprite.Editor
 	public sealed class AsepriteImporterEditor : ScriptedImporterEditor
 	{
 		private ReorderableList _generatedClipList;
-		private ReorderableList _mergeTargetsList;
 
 		private static bool _bIsClipSettingsOpen;
 
@@ -24,7 +23,6 @@ namespace Miscreant.Aseprite.Editor
 			base.OnEnable();
 
 			InitializeGeneratedClipList();
-			InitializeMergeTargetsList();
 
 			MergedClip.OnInvalidClipAssigned.AddListener(ShowInvalidClipWarning);
 		}
@@ -61,16 +59,7 @@ namespace Miscreant.Aseprite.Editor
 			if (_bIsClipSettingsOpen)
 			{
 				EditorGUILayout.PropertyField(clipSettingsProp);
-
-				if (importer.clipSettings.createMode != ClipSettings.CreateMode.MergeIntoExistingClips)
-				{
-					_generatedClipList.DoLayoutList();
-				}
-
-				if (importer.clipSettings.createMode != ClipSettings.CreateMode.CreateNewAsset)
-				{
-					_mergeTargetsList.DoLayoutList();
-				}
+				_generatedClipList.DoLayoutList();
 			}
 
 			EditorGUILayout.EndFoldoutHeaderGroup();
@@ -130,36 +119,6 @@ namespace Miscreant.Aseprite.Editor
 				(Rect rect, int index, bool isActive, bool isFocused) =>
 				{
 					var element = _generatedClipList.serializedProperty.GetArrayElementAtIndex(index);
-					EditorGUI.PropertyField(rect, element, GUIContent.none);
-				}
-			);
-		}
-
-		private void InitializeMergeTargetsList()
-		{
-			var mergeTargetsProp = serializedObject.FindProperty("mergeTargetClips");
-
-			_mergeTargetsList = new ReorderableList(
-				serializedObject,
-				mergeTargetsProp,
-				true,
-				true,
-				true,
-				true
-			);
-
-			_mergeTargetsList.elementHeightCallback = (
-				index => { return EditorGUI.GetPropertyHeight(_mergeTargetsList.serializedProperty.GetArrayElementAtIndex(index)); }
-			);
-
-			_mergeTargetsList.drawHeaderCallback = (
-				rect => { EditorGUI.LabelField(rect, "Merge Target Clips", EditorStyles.boldLabel); }
-			);
-
-			_mergeTargetsList.drawElementCallback = (
-				(Rect rect, int index, bool isActive, bool isFocused) =>
-				{
-					var element = _mergeTargetsList.serializedProperty.GetArrayElementAtIndex(index);
 					EditorGUI.PropertyField(rect, element, GUIContent.none);
 				}
 			);
