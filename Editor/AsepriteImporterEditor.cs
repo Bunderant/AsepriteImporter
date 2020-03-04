@@ -50,10 +50,17 @@ namespace Miscreant.Aseprite.Editor
 
 			EditorGUI.BeginDisabledGroup(!shouldGenerateClips);
 
+			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+			EditorGUILayout.BeginHorizontal();
+			EditorGUILayout.Space(12, false); // Gross code to force the foldout to be indented within the box bounds. 
 			_bIsClipSettingsOpen = EditorGUILayout.BeginFoldoutHeaderGroup(_bIsClipSettingsOpen && shouldGenerateClips, "Clip Settings");
+			EditorGUILayout.Space(2, false); 
+			EditorGUILayout.EndHorizontal();
+
 			if (_bIsClipSettingsOpen)
 			{
-				EditorGUILayout.PropertyField(clipSettingsProp, new GUIContent("Default Clip Settings"));
+				EditorGUILayout.PropertyField(clipSettingsProp);
 
 				if (importer.clipSettings.createMode != ClipSettings.CreateMode.MergeIntoExistingClips)
 				{
@@ -67,6 +74,7 @@ namespace Miscreant.Aseprite.Editor
 			}
 
 			EditorGUILayout.EndFoldoutHeaderGroup();
+			EditorGUILayout.EndVertical();
 			EditorGUI.EndDisabledGroup();
 
 			if (EditorGUI.EndChangeCheck())
