@@ -89,8 +89,11 @@ namespace Miscreant.Aseprite.Editor
 
 				for (int i = 0; i < clipCount; i++)
 				{
-					var clip = clips[i];
-					generatedClips[i] = new GeneratedClip() { clip = clip };
+					AnimationClip clip = clips[i];
+					GeneratedClip generatedClip = GeneratedClip.Default;
+					generatedClip.clip = clip;
+
+					generatedClips[i] = generatedClip;
 					
 					ctx.AddObjectToAsset(clip.name, clip);
 				}

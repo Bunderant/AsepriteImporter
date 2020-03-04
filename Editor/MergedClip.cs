@@ -17,5 +17,7 @@ namespace Miscreant.Aseprite.Editor
 		public class InvalidClipEvent : UnityEvent<AnimationClip> { }
 		public static InvalidClipEvent OnInvalidClipAssigned = new InvalidClipEvent();
 		#endif
+
+		public static MergedClip Default { get { return new MergedClip(); } }
 	}
 }

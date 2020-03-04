@@ -24,5 +24,19 @@ namespace Miscreant.Aseprite.Editor
 
 		[Tooltip("List of clips to merge the generated SpriteRenderer keyframes into.")]
 		public MergedClip[] mergeTargetClips;
+
+		public static GeneratedClip Default
+		{
+			get
+			{
+				return new GeneratedClip()
+				{
+					createMode = CreateMode.SubassetOnly,
+					rendererPathOverride = string.Empty,
+					clip = null,
+					mergeTargetClips = new MergedClip[] { MergedClip.Default } // Include one so the user doesn't have to add it manually 
+				};
+			}
+		}
 	}
 }
