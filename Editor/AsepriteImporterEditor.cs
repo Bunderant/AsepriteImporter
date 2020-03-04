@@ -57,13 +57,6 @@ namespace Miscreant.Aseprite.Editor
 				}
 			);
 
-			_mergeTargetsList.onChangedCallback = (
-				rect =>
-				{
-					Debug.LogWarning("TODO: Miscreant: Make sure selected clip is not a subasset of this object (crashes editor on import).");
-				}
-			);
-
 			MergedClip.OnInvalidClipAssigned.AddListener(ShowInvalidClipWarning);
 		}
 
