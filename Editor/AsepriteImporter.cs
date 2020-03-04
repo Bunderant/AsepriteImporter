@@ -22,8 +22,7 @@ namespace Miscreant.Aseprite.Editor
 		public bool generateAnimationClips;
 		public ClipSettings clipSettings = ClipSettings.Default;
 
-		public GeneratedClip[] generatedClips = new GeneratedClip[] { new GeneratedClip{ clip = null, rendererPathOverride = "Hey" } };
-		public MergedClip[] mergeTargetClips;
+		public GeneratedClip[] generatedClips;
 
 		public Texture2D packedSpriteTexture;
 		public int clipCount;
@@ -82,14 +81,24 @@ namespace Miscreant.Aseprite.Editor
 				ctx.AddObjectToAsset(sprite.name, sprite);
 			}
 
-			clipCount = 0;
 			if (generateAnimationClips)
 			{
-				foreach (AnimationClip clip in CreateAnimationClips(aseInfo, sprites))
+				List<AnimationClip> clips = CreateAnimationClips(aseInfo, sprites);
+				clipCount = clips.Count;
+				generatedClips = new GeneratedClip[clipCount];
+
+				for (int i = 0; i < clipCount; i++)
 				{
+					var clip = clips[i];
+					generatedClips[i] = new GeneratedClip() { clip = clip };
+					
 					ctx.AddObjectToAsset(clip.name, clip);
-					clipCount++;
 				}
+			}
+			else
+			{
+				clipCount = 0;
+				generatedClips = new GeneratedClip[clipCount];
 			}
 
 			// Now that we have all generated assets saved as sub-objects, delete the temp files created by Aseprite. 
