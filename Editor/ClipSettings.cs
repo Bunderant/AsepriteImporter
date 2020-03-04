@@ -8,13 +8,6 @@ namespace Miscreant.Aseprite.Editor
 	{
 		public const string DEFAULT_RENDERER_PATH = "";
 
-		public enum CreateMode
-		{
-			CreateNewAsset,
-			MergeIntoExistingClips,
-			CreateAssetAndMergeIntoExisting
-		}
-
 		[Tooltip("Path from the root Animator to the SpriteRenderer's GameObject.")]
 		public string spriteRendererPath;
 

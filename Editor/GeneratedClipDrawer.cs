@@ -4,6 +4,8 @@ using UnityEditor;
 
 namespace Miscreant.Aseprite.Editor
 {
+	using CreateMode = GeneratedClip.CreateMode;
+
 	[CustomPropertyDrawer(typeof(GeneratedClip))]
 	public sealed class GeneratedClipDrawer : PropertyDrawer
 	{
@@ -76,7 +78,7 @@ namespace Miscreant.Aseprite.Editor
 			pos.y += EditorGUIUtility.standardVerticalSpacing;
 			pos.y += EditorGUIUtility.singleLineHeight;
 
-			if (createModeProp.enumValueIndex != (int)ClipSettings.CreateMode.MergeIntoExistingClips)
+			if (createModeProp.enumValueIndex != (int)CreateMode.MergeIntoExistingClips)
 			{
 				EditorGUI.BeginDisabledGroup(true);
 				EditorGUI.PropertyField(
@@ -109,7 +111,7 @@ namespace Miscreant.Aseprite.Editor
 			pos.y += EditorGUIUtility.standardVerticalSpacing;
 			pos.y += EditorGUIUtility.singleLineHeight;
 
-			if (createModeProp.enumValueIndex != (int)ClipSettings.CreateMode.CreateNewAsset)
+			if (createModeProp.enumValueIndex != (int)CreateMode.CreateNewAsset)
 			{
 				_mergeTargetsList.DoList(
 					new Rect(
@@ -134,18 +136,18 @@ namespace Miscreant.Aseprite.Editor
 			float height = EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing * 3;
 
 			var createModeProp = property.FindPropertyRelative("createMode");
-			var createMode = (ClipSettings.CreateMode)createModeProp.enumValueIndex;
+			var createMode = (CreateMode)createModeProp.enumValueIndex;
 
 			switch (createMode)
 			{
-				case ClipSettings.CreateMode.CreateNewAsset:
+				case CreateMode.CreateNewAsset:
 					height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 					break;
-				case ClipSettings.CreateMode.CreateAssetAndMergeIntoExisting:
+				case CreateMode.CreateAssetAndMergeIntoExisting:
 					height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 					height += _mergeTargetsList.GetHeight();
 					break;
-				case ClipSettings.CreateMode.MergeIntoExistingClips:
+				case CreateMode.MergeIntoExistingClips:
 					height += _mergeTargetsList.GetHeight();
 					break;
 			}
