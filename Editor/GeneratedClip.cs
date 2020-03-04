@@ -8,9 +8,9 @@ namespace Miscreant.Aseprite.Editor
 	{
 		public enum CreateMode
 		{
-			CreateNewAsset,
-			MergeIntoExistingClips,
-			CreateAssetAndMergeIntoExisting
+			SubassetOnly,
+			MergeIntoExistingOnly,
+			SubassetAndMergeExisting
 		}
 
 		[Tooltip("Determines whether new clips are created, keyframes are merged into existing clips, or both.")]

@@ -78,7 +78,7 @@ namespace Miscreant.Aseprite.Editor
 			pos.y += EditorGUIUtility.standardVerticalSpacing;
 			pos.y += EditorGUIUtility.singleLineHeight;
 
-			if (createModeProp.enumValueIndex != (int)CreateMode.MergeIntoExistingClips)
+			if (createModeProp.enumValueIndex != (int)CreateMode.MergeIntoExistingOnly)
 			{
 				EditorGUI.BeginDisabledGroup(true);
 				EditorGUI.PropertyField(
@@ -111,7 +111,7 @@ namespace Miscreant.Aseprite.Editor
 			pos.y += EditorGUIUtility.standardVerticalSpacing;
 			pos.y += EditorGUIUtility.singleLineHeight;
 
-			if (createModeProp.enumValueIndex != (int)CreateMode.CreateNewAsset)
+			if (createModeProp.enumValueIndex != (int)CreateMode.SubassetOnly)
 			{
 				_mergeTargetsList.DoList(
 					new Rect(
@@ -140,14 +140,14 @@ namespace Miscreant.Aseprite.Editor
 
 			switch (createMode)
 			{
-				case CreateMode.CreateNewAsset:
+				case CreateMode.SubassetOnly:
 					height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 					break;
-				case CreateMode.CreateAssetAndMergeIntoExisting:
-					height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+				case CreateMode.MergeIntoExistingOnly:
 					height += _mergeTargetsList.GetHeight();
 					break;
-				case CreateMode.MergeIntoExistingClips:
+				case CreateMode.SubassetAndMergeExisting:
+					height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 					height += _mergeTargetsList.GetHeight();
 					break;
 			}
