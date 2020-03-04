@@ -9,7 +9,10 @@ namespace Miscreant.Aseprite.Editor
 	[CanEditMultipleObjects]
 	public sealed class AsepriteImporterEditor : ScriptedImporterEditor
 	{
+		private ReorderableList _generatedClipList;
 		private ReorderableList _mergeTargetsList;
+
+		private static bool _bIsClipSettingsOpen;
 
 		protected override bool useAssetDrawPreview
 		{
@@ -20,42 +23,8 @@ namespace Miscreant.Aseprite.Editor
 		{
 			base.OnEnable();
 
-			var mergeTargetsProp = serializedObject.FindProperty("mergeTargetClips");
-
-			_mergeTargetsList = new ReorderableList(
-				serializedObject,
-				mergeTargetsProp,
-				true,
-				true,
-				true,
-				true
-			);
-
-			_mergeTargetsList.elementHeightCallback = (
-				index =>
-				{
-					return EditorGUI.GetPropertyHeight(_mergeTargetsList.serializedProperty.GetArrayElementAtIndex(index));
-				}
-			);
-
-			_mergeTargetsList.drawHeaderCallback = (
-				rect =>
-				{
-					EditorGUI.LabelField(rect, "Merge Target Clips", EditorStyles.boldLabel);
-				}
-			);
-
-			_mergeTargetsList.drawElementCallback = (
-				(Rect rect, int index, bool isActive, bool isFocused) =>
-				{
-					var element = _mergeTargetsList.serializedProperty.GetArrayElementAtIndex(index);
-					EditorGUI.PropertyField(
-						rect,
-						element,
-						GUIContent.none
-					);
-				}
-			);
+			InitializeGeneratedClipList();
+			InitializeMergeTargetsList();
 
 			MergedClip.OnInvalidClipAssigned.AddListener(ShowInvalidClipWarning);
 		}
@@ -80,13 +49,25 @@ namespace Miscreant.Aseprite.Editor
 			bool shouldGenerateClips = EditorGUILayout.Toggle("Generates Animation Clips", importer.generateAnimationClips);
 
 			EditorGUI.BeginDisabledGroup(!shouldGenerateClips);
-			EditorGUILayout.PropertyField(clipSettingsProp, new GUIContent("Default Clip Settings"));
-			EditorGUI.EndDisabledGroup();
-			
-			if (shouldGenerateClips && importer.clipSettings.createMode != ClipSettings.CreateMode.CreateNewAsset)
+
+			_bIsClipSettingsOpen = EditorGUILayout.BeginFoldoutHeaderGroup(_bIsClipSettingsOpen && shouldGenerateClips, "Clip Settings");
+			if (_bIsClipSettingsOpen)
 			{
-				_mergeTargetsList.DoLayoutList();
+				EditorGUILayout.PropertyField(clipSettingsProp, new GUIContent("Default Clip Settings"));
+
+				if (importer.clipSettings.createMode != ClipSettings.CreateMode.MergeIntoExistingClips)
+				{
+					_generatedClipList.DoLayoutList();
+				}
+
+				if (importer.clipSettings.createMode != ClipSettings.CreateMode.CreateNewAsset)
+				{
+					_mergeTargetsList.DoLayoutList();
+				}
 			}
+
+			EditorGUILayout.EndFoldoutHeaderGroup();
+			EditorGUI.EndDisabledGroup();
 
 			if (EditorGUI.EndChangeCheck())
 			{
@@ -113,6 +94,66 @@ namespace Miscreant.Aseprite.Editor
 			EditorGUI.DropShadowLabel(
 				r,
 				$"Packed Size: {texture.width}x{texture.height} - Animation Clips: {importer.clipCount}"
+			);
+		}
+
+		private void InitializeGeneratedClipList()
+		{
+			var generatedClipsProp = serializedObject.FindProperty("generatedClips");
+
+			_generatedClipList = new ReorderableList(
+				generatedClipsProp.serializedObject,
+				generatedClipsProp,
+				false,
+				true,
+				false,
+				false
+			);
+
+			_generatedClipList.elementHeightCallback = (
+				index => { return EditorGUI.GetPropertyHeight(_generatedClipList.serializedProperty.GetArrayElementAtIndex(index)); }
+			);
+
+			_generatedClipList.drawHeaderCallback = (
+				rect => { EditorGUI.LabelField(rect, "Generated Clips", EditorStyles.boldLabel); }
+			);
+
+			_generatedClipList.drawElementCallback = (
+				(Rect rect, int index, bool isActive, bool isFocused) =>
+				{
+					var element = _generatedClipList.serializedProperty.GetArrayElementAtIndex(index);
+					EditorGUI.PropertyField(rect, element, GUIContent.none);
+				}
+			);
+		}
+
+		private void InitializeMergeTargetsList()
+		{
+			var mergeTargetsProp = serializedObject.FindProperty("mergeTargetClips");
+
+			_mergeTargetsList = new ReorderableList(
+				serializedObject,
+				mergeTargetsProp,
+				true,
+				true,
+				true,
+				true
+			);
+
+			_mergeTargetsList.elementHeightCallback = (
+				index => { return EditorGUI.GetPropertyHeight(_mergeTargetsList.serializedProperty.GetArrayElementAtIndex(index)); }
+			);
+
+			_mergeTargetsList.drawHeaderCallback = (
+				rect => { EditorGUI.LabelField(rect, "Merge Target Clips", EditorStyles.boldLabel); }
+			);
+
+			_mergeTargetsList.drawElementCallback = (
+				(Rect rect, int index, bool isActive, bool isFocused) =>
+				{
+					var element = _mergeTargetsList.serializedProperty.GetArrayElementAtIndex(index);
+					EditorGUI.PropertyField(rect, element, GUIContent.none);
+				}
 			);
 		}
 

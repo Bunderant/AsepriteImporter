@@ -2,7 +2,6 @@
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 using System.IO;
-using System;
 using System.Collections.Generic;
 
 namespace Miscreant.Aseprite.Editor
@@ -23,6 +22,7 @@ namespace Miscreant.Aseprite.Editor
 		public bool generateAnimationClips;
 		public ClipSettings clipSettings = ClipSettings.Default;
 
+		public GeneratedClip[] generatedClips = new GeneratedClip[] { new GeneratedClip{ clip = null, rendererPathOverride = "Hey" } };
 		public MergedClip[] mergeTargetClips;
 
 		public Texture2D packedSpriteTexture;
