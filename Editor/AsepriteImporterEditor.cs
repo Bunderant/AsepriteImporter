@@ -63,6 +63,15 @@ namespace Miscreant.Aseprite.Editor
 					Debug.LogWarning("TODO: Miscreant: Make sure selected clip is not a subasset of this object (crashes editor on import).");
 				}
 			);
+
+			MergedClip.OnInvalidClipAssigned.AddListener(ShowInvalidClipWarning);
+		}
+
+		public override void OnDisable()
+		{
+			base.OnDisable();
+
+			MergedClip.OnInvalidClipAssigned.RemoveListener(ShowInvalidClipWarning);
 		}
 
 		public override void OnInspectorGUI()
@@ -112,6 +121,18 @@ namespace Miscreant.Aseprite.Editor
 				r,
 				$"Packed Size: {texture.width}x{texture.height} - Animation Clips: {importer.clipCount}"
 			);
+		}
+
+		private void ShowInvalidClipWarning(AnimationClip clip)
+		{
+			var message = new GUIContent("Merge target clip cannot be an Aseprite subasset.");
+			double fadeoutWait = 2f;
+
+			// If the object picker isn't open, show the notification in the inspector window. 
+			if (EditorGUIUtility.GetObjectPickerObject() == null)
+				EditorWindowUtility.ShowInspectorNotification(message, fadeoutWait);
+			else
+				EditorWindow.focusedWindow.ShowNotification(message, fadeoutWait);
 		}
 	}
 }

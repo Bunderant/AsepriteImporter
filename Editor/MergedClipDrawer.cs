@@ -33,18 +33,14 @@ namespace Miscreant.Aseprite.Editor
 			if (EditorGUI.EndChangeCheck())
 			{
 				// Revert the clip assignment if it was an invalid selection.
-				var clip = (AnimationClip)clipProp.objectReferenceValue;
-				if (clip != null && AssetDatabase.IsSubAsset(clip))
+				var assignedClip = (AnimationClip)clipProp.objectReferenceValue;
+				if (assignedClip != null && AssetDatabase.IsSubAsset(assignedClip))
 				{
-					string mainAssetPath = AssetDatabase.GetAssetPath(clipProp.objectReferenceValue);
+					string mainAssetPath = AssetDatabase.GetAssetPath(assignedClip);
 					var clipImporter = AssetImporter.GetAtPath(mainAssetPath);
 					if (clipImporter is AsepriteImporter)
 					{
-						Debug.LogWarning(
-							$"Cannot merge into clips that are Aseprite subassets: {clip.name}",
-							clipProp.objectReferenceValue
-						);
-
+						MergedClip.OnInvalidClipAssigned?.Invoke(assignedClip);
 						clipProp.objectReferenceValue = previousClip;
 					}
 				}
