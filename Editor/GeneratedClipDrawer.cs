@@ -190,6 +190,9 @@ namespace Miscreant.Aseprite.Editor
 					break;
 			}
 
+			// Add a little bit more pading to the bottom of the element
+			height += 5;
+
 			return height;
 		}
 	}

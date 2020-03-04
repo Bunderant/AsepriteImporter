@@ -132,6 +132,17 @@ namespace Miscreant.Aseprite.Editor
 					EditorGUI.PropertyField(rect, element, GUIContent.none);
 				}
 			);
+
+			_generatedClipList.drawElementBackgroundCallback = (
+				(Rect rect, int index, bool isActive, bool isFocused) =>
+				{
+					// Zebra striping for clip list elements.
+					if (index % 2 != 0)
+					{
+						EditorGUI.DrawRect(rect, EditorGUIUtility.isProSkin ? new Color (1, 1, 1, 0.1f) : new Color(0, 0, 0, 0.1f));
+					}
+				}
+			);
 		}
 
 		private void ShowInvalidClipWarning(AnimationClip clip)
