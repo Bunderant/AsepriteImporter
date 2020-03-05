@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Miscreant.Aseprite.Editor
 {
 	[Serializable]
-	public sealed class SpriteSheetData
+	public sealed class SpriteSheetData : ISerializationCallbackReceiver
 	{
 		[Serializable]
 		public struct Frame
@@ -69,9 +69,42 @@ namespace Miscreant.Aseprite.Editor
 			public int from;
 			public int to;
 			public string direction;
+
+			/// <summary>
+			/// Checks whether a name change is allowed from an existing frame to an updated one.
+			/// </summary>
+			/// <param name="existingTag">The existing tag before the reimport.</param>
+			/// <returns>true if the name has changed, false otherwise. </returns>
+			public static bool IsNameChangeAllowed(FrameTag existing, FrameTag updated)
+			{
+				return (
+					existing.from == updated.from &&
+					existing.to == updated.to
+				);
+			}
 		}
 
 		public Frame[] frames;
 		public MetaData meta;
+
+		public void OnBeforeSerialize()
+		{
+			// Do nothin' but keep the ISerializationCallbackReceiver interface happy.
+		}
+
+		public void OnAfterDeserialize()
+		{
+			Array.Sort(
+				meta.frameTags,
+				new Comparison<FrameTag>((a, b) => { 
+					int value = a.name.CompareTo(b.name);
+					if (value == 0)
+					{
+						throw new System.Exception("All frame tags must have unique names.");
+					}
+					return value;
+				})
+			);
+		}
 	}
 }

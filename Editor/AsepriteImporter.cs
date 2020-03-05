@@ -255,5 +255,64 @@ namespace Miscreant.Aseprite.Editor
 
 			return clips;
 		}
-    }
+	}
 }
+
+/*
+General Rules:
+ - All tags must be uniquely named within each Aseprite file. 
+ - No two Aseprite files in the project can have the same name (even in different folders). 
+Atomic tag operations between imports:
+ - Renaming
+ - Adding
+ - Deleting
+*/
+
+// Check if the rules for atomic import operations have been broken. 
+
+// FrameTag[] existingTags = this.spriteSheetData.meta.frameTags;
+// FrameTag[] newTags = newData.meta.frameTags;
+
+// int newTagCount = newTags.Length;
+// int existingTagCount = existingTags.Length;
+
+// // Make sure all new frame tags are unique:
+// {
+// 	var uniqueNames = new HashSet<string>();
+// 	foreach (FrameTag tag in newTags)
+// 	{
+// 		if (!uniqueNames.Add(tag.name.ToLower()))
+// 		{
+// 			throw new ArgumentException("All frame tag names must be unique.");
+// 		}
+// 	}
+// }
+
+// bool bTagsAdded = newTagCount > existingTagCount;
+// bool bTagsRemoved = newTagCount < existingTagCount;
+// bool bTagCountMatches = !(bTagsAdded || bTagsRemoved);
+
+// int newFrameCount = newData.frames.Length;
+// int existingFrameCount = this.spriteSheetData.frames.Length;
+
+// bool bFramesAdded = newFrameCount > existingFrameCount;
+// bool bFramesRemoved = newFrameCount < existingFrameCount;
+// bool bFrameCountMatches = !(bFramesAdded || bFramesRemoved);
+
+// // Allow renaming clips only if no other frame properties have changed. 
+// if (bTagCountMatches && bFrameCountMatches)
+// {
+// 	int tagCount = existingTagCount; // For readability; we know new/existing tag counts are equal by this point.
+// 	bool bNameChangesAllowed = true;
+// 	for (int i = 0; bNameChangesAllowed && i < tagCount; i++)
+// 	{
+// 		bNameChangesAllowed &= FrameTag.IsNameChangeAllowed(existingTags[i], newTags[i]);
+// 	}
+
+// 	// If renaming is allowed, then no frame changes are off-limits. 
+// 	if (bNameChangesAllowed)
+// 	{
+// 		this.spriteSheetData = newData;
+// 		return;
+// 	}
+// }
