@@ -85,15 +85,41 @@ namespace Miscreant.Aseprite.Editor
 			{
 				List<AnimationClip> clips = CreateAnimationClips(aseInfo, sprites);
 				clipCount = clips.Count;
-				generatedClips = new GeneratedClip[clipCount];
+
+				var previousGeneratedClips = new Dictionary<string, GeneratedClip>();
+				foreach (var generatedClip in generatedClips)
+				{
+					previousGeneratedClips.Add(generatedClip.name, generatedClip);
+				}
+
+				var newGeneratedClips = new List<GeneratedClip>(clipCount);
 
 				for (int i = 0; i < clipCount; i++)
 				{
 					AnimationClip clip = clips[i];
-					generatedClips[i] = GeneratedClip.Create(aseInfo.spriteSheetData.meta.frameTags[i].name, clip);
+					string tagName = aseInfo.spriteSheetData.meta.frameTags[i].name;
 					
-					ctx.AddObjectToAsset(clip.name, clip);
+					bool clipDoesExist = previousGeneratedClips.TryGetValue(tagName, out GeneratedClip clipData);
+
+					if (clipDoesExist)
+					{
+						clipData.name = tagName;
+						clipData.clip = clipData.createMode != GeneratedClip.CreateMode.MergeIntoExistingOnly ? clip : null;
+					}
+					else
+					{
+						clipData = GeneratedClip.Create(aseInfo.spriteSheetData.meta.frameTags[i].name, clip);
+					}
+					
+					if (clipData.createMode != GeneratedClip.CreateMode.MergeIntoExistingOnly)
+					{
+						ctx.AddObjectToAsset(clip.name, clip);
+					}
+
+					newGeneratedClips.Add(clipData);
 				}
+
+				generatedClips = newGeneratedClips.ToArray();
 			}
 			else
 			{
