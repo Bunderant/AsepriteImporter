@@ -60,7 +60,7 @@ namespace Miscreant.Aseprite.Editor
 				);
 
 				var nameProp = generatedClipProp.FindPropertyRelative("name");
-				_mergeTargetListLookup[nameProp.stringValue] = mergeTargetsList;
+				_mergeTargetListLookup[nameProp.propertyPath] = mergeTargetsList;
 			}
 		}
 
@@ -77,14 +77,15 @@ namespace Miscreant.Aseprite.Editor
 			var rendererPathProp = property.FindPropertyRelative("rendererPathOverride");
 
 			EditorGUI.BeginProperty(pos, label, property);
+			EditorGUI.BeginChangeCheck();
 
 			pos.y += EditorGUIUtility.standardVerticalSpacing;
 
 			GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout);
 			foldoutStyle.fontStyle = FontStyle.Bold;
 
-			_foldoutLookup.TryGetValue(nameProp.stringValue, out bool isFoldoutOpen);
-			_foldoutLookup[nameProp.stringValue] = EditorGUI.Foldout(
+			_foldoutLookup.TryGetValue(nameProp.propertyPath, out bool isFoldoutOpen);
+			_foldoutLookup[nameProp.propertyPath] = EditorGUI.Foldout(
 				new Rect(
 					pos.x + 10, // Accounts for foldout arrow indentation.
 					pos.y,
@@ -154,7 +155,7 @@ namespace Miscreant.Aseprite.Editor
 
 				if (createModeProp.enumValueIndex != (int)CreateMode.SubassetOnly)
 				{
-					var mergeList = _mergeTargetListLookup[nameProp.stringValue];
+					var mergeList = _mergeTargetListLookup[nameProp.propertyPath];
 					mergeList.DoList(
 						new Rect(
 							pos.x,
@@ -177,7 +178,7 @@ namespace Miscreant.Aseprite.Editor
 			}
 
 			var nameProp = property.FindPropertyRelative("name");
-			_foldoutLookup.TryGetValue(nameProp.stringValue, out bool isFoldoutOpen);
+			_foldoutLookup.TryGetValue(nameProp.propertyPath, out bool isFoldoutOpen);
 			if (!isFoldoutOpen)
 			{
 				return EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2;
@@ -194,11 +195,11 @@ namespace Miscreant.Aseprite.Editor
 					height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 					break;
 				case CreateMode.MergeIntoExistingOnly:
-					height += _mergeTargetListLookup[nameProp.stringValue].GetHeight();
+					height += _mergeTargetListLookup[nameProp.propertyPath].GetHeight();
 					break;
 				case CreateMode.SubassetAndMergeExisting:
 					height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
-					height += _mergeTargetListLookup[nameProp.stringValue].GetHeight();
+					height += _mergeTargetListLookup[nameProp.propertyPath].GetHeight();
 					break;
 			}
 
