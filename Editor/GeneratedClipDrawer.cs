@@ -114,13 +114,46 @@ namespace Miscreant.Aseprite.Editor
 						pos.width,
 						EditorGUIUtility.singleLineHeight
 					),
+					rendererPathProp
+				);
+
+				// Show placeholer text if override path isn't specified
+                if (string.IsNullOrEmpty(rendererPathProp.stringValue))
+                {
+					var placeholderTextStyle = new GUIStyle(EditorStyles.label);
+                	placeholderTextStyle.fontStyle = FontStyle.Italic;
+
+                    EditorGUI.BeginDisabledGroup(true);
+                    EditorGUI.TextArea(
+						new Rect(
+							pos.x + EditorGUIUtility.labelWidth + 5,
+							pos.y,
+							pos.width,
+							EditorGUIUtility.singleLineHeight
+						), 
+						"None",
+						placeholderTextStyle
+					);
+                    EditorGUI.EndDisabledGroup();
+                }
+
+				pos.y += EditorGUIUtility.standardVerticalSpacing;
+				pos.y += EditorGUIUtility.singleLineHeight;
+
+				EditorGUI.PropertyField(
+					new Rect(
+						pos.x,
+						pos.y,
+						pos.width,
+						EditorGUIUtility.singleLineHeight
+					),
 					createModeProp
 				);
 
 				pos.y += EditorGUIUtility.standardVerticalSpacing;
 				pos.y += EditorGUIUtility.singleLineHeight;
 
-				if (createModeProp.enumValueIndex != (int)CreateMode.MergeIntoExistingOnly)
+				if (createModeProp.enumValueIndex != (int)CreateMode.Merge)
 				{
 					EditorGUI.BeginDisabledGroup(true);
 					EditorGUI.PropertyField(
@@ -140,20 +173,7 @@ namespace Miscreant.Aseprite.Editor
 					pos.y += EditorGUIUtility.singleLineHeight;
 				}
 
-				EditorGUI.PropertyField(
-					new Rect(
-						pos.x,
-						pos.y,
-						pos.width,
-						EditorGUIUtility.singleLineHeight
-					),
-					rendererPathProp
-				);
-
-				pos.y += EditorGUIUtility.standardVerticalSpacing;
-				pos.y += EditorGUIUtility.singleLineHeight;
-
-				if (createModeProp.enumValueIndex != (int)CreateMode.SubassetOnly)
+				if (createModeProp.enumValueIndex != (int)CreateMode.Subasset)
 				{
 					var mergeList = _mergeTargetListLookup[nameProp.propertyPath];
 					mergeList.DoList(
@@ -191,13 +211,13 @@ namespace Miscreant.Aseprite.Editor
 
 			switch (createMode)
 			{
-				case CreateMode.SubassetOnly:
+				case CreateMode.Subasset:
 					height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 					break;
-				case CreateMode.MergeIntoExistingOnly:
+				case CreateMode.Merge:
 					height += _mergeTargetListLookup[nameProp.propertyPath].GetHeight();
 					break;
-				case CreateMode.SubassetAndMergeExisting:
+				case CreateMode.SubassetAndMerge:
 					height += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 					height += _mergeTargetListLookup[nameProp.propertyPath].GetHeight();
 					break;

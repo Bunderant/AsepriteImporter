@@ -104,14 +104,14 @@ namespace Miscreant.Aseprite.Editor
 					if (clipDoesExist)
 					{
 						clipData.name = tagName;
-						clipData.clip = clipData.createMode != GeneratedClip.CreateMode.MergeIntoExistingOnly ? clip : null;
+						clipData.clip = clipData.createMode != GeneratedClip.CreateMode.Merge ? clip : null;
 					}
 					else
 					{
 						clipData = GeneratedClip.Create(aseInfo.spriteSheetData.meta.frameTags[i].name, clip);
 					}
 					
-					if (clipData.createMode != GeneratedClip.CreateMode.MergeIntoExistingOnly)
+					if (clipData.createMode != GeneratedClip.CreateMode.Merge)
 					{
 						ctx.AddObjectToAsset(clip.name, clip);
 					}

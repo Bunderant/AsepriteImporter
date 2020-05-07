@@ -8,9 +8,9 @@ namespace Miscreant.Aseprite.Editor
 	{
 		public enum CreateMode
 		{
-			SubassetOnly,
-			MergeIntoExistingOnly,
-			SubassetAndMergeExisting
+			Subasset,
+			Merge,
+			SubassetAndMerge
 		}
 
 		[Tooltip("Name of the associated Aseprite tag.")]
