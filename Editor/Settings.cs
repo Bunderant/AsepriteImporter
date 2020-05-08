@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEditor;
 
 namespace Miscreant.Aseprite.Editor
 {
@@ -20,6 +21,11 @@ namespace Miscreant.Aseprite.Editor
 		public Texture2D GetIcon(bool importerGeneratesAnimationClips)
 		{
 			return importerGeneratesAnimationClips ? _iconWithClips : _icon;
+		}
+
+		public static Settings LoadSettingsAsset()
+		{
+			return AssetDatabase.LoadAssetAtPath<Settings>(PATH);
 		}
 	}
 }

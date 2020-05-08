@@ -29,7 +29,7 @@ namespace Miscreant.Aseprite.Editor
 
 		public override void OnImportAsset(AssetImportContext ctx)
 		{
-			var settings = (Settings)AssetDatabase.LoadAssetAtPath(Settings.PATH, typeof(Settings));
+			Settings settings = Settings.LoadSettingsAsset();
 
 			var main = ScriptableObject.CreateInstance<AsepriteAsset>();
 			ctx.AddObjectToAsset("Main", main, settings.GetIcon(generateAnimationClips));
