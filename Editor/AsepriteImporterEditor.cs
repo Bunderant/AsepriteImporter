@@ -44,37 +44,34 @@ namespace Miscreant.Aseprite.Editor
 
 			EditorGUI.BeginChangeCheck();
 
+			EditorGUILayout.Space();
 			bool shouldGenerateClips = EditorGUILayout.Toggle("Generates Animation Clips", importer.generateAnimationClips);
 
+			// Horizontal line:
+			EditorGUILayout.LabelField(string.Empty, GUI.skin.horizontalSlider);
+
 			EditorGUI.BeginDisabledGroup(!shouldGenerateClips);
-
-			GUIStyle helpBoxStyle = new GUIStyle(EditorStyles.helpBox);
-			helpBoxStyle.padding.bottom += 4; // Add to the padding to make the text align more nicely. 
-
-			EditorGUILayout.BeginVertical(helpBoxStyle);
-
-			EditorGUILayout.BeginHorizontal();
-			EditorGUILayout.Space(12, false); // Gross code to force the foldout to be indented within the box bounds. 
 
 			GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout);
 			foldoutStyle.fontStyle = FontStyle.Bold;
 			_bIsClipSettingsOpen = EditorGUILayout.BeginFoldoutHeaderGroup(
 				_bIsClipSettingsOpen && shouldGenerateClips,
-				"Clip Settings", foldoutStyle
+				"Clip Settings",
+				foldoutStyle
 			);
-
-			EditorGUILayout.Space(2, false); // End of foldout indent hackery. 
-			EditorGUILayout.EndHorizontal();
 
 			if (_bIsClipSettingsOpen)
 			{
+				EditorGUILayout.Space();
 				EditorGUILayout.PropertyField(clipSettingsProp);
-				_generatedClipList.DoLayoutList();
+				_generatedClipList.DoLayoutList();	
 			}
 
 			EditorGUILayout.EndFoldoutHeaderGroup();
-			EditorGUILayout.EndVertical();
 			EditorGUI.EndDisabledGroup();
+
+			// Horizontal line:
+			EditorGUILayout.LabelField(string.Empty, GUI.skin.horizontalSlider);
 
 			if (EditorGUI.EndChangeCheck())
 			{
@@ -117,12 +114,12 @@ namespace Miscreant.Aseprite.Editor
 				false
 			);
 
+			_generatedClipList.showDefaultBackground = false;
+			_generatedClipList.headerHeight = 0f;
+			_generatedClipList.footerHeight = 0f; 
+
 			_generatedClipList.elementHeightCallback = (
 				index => { return EditorGUI.GetPropertyHeight(_generatedClipList.serializedProperty.GetArrayElementAtIndex(index)); }
-			);
-
-			_generatedClipList.drawHeaderCallback = (
-				rect => { EditorGUI.LabelField(rect, $"Tagged Clips ({_generatedClipList.count})", EditorStyles.boldLabel); }
 			);
 
 			_generatedClipList.drawElementCallback = (
@@ -139,7 +136,7 @@ namespace Miscreant.Aseprite.Editor
 					// Zebra striping for clip list elements.
 					if (index % 2 != 0)
 					{
-						EditorGUI.DrawRect(rect, EditorGUIUtility.isProSkin ? new Color (1, 1, 1, 0.1f) : new Color(0, 0, 0, 0.1f));
+						EditorGUI.DrawRect(rect, EditorGUIUtility.isProSkin ? new Color(1, 1, 1, 0.1f) : new Color(0, 0, 0, 0.1f));
 					}
 				}
 			);

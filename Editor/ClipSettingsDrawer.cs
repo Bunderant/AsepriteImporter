@@ -22,6 +22,26 @@ namespace Miscreant.Aseprite.Editor
 				rendererPathProp
 			);
 
+			// Show placeholer text if override path isn't specified
+			if (string.IsNullOrEmpty(rendererPathProp.stringValue))
+			{
+				var placeholderTextStyle = new GUIStyle(EditorStyles.label);
+				placeholderTextStyle.fontStyle = FontStyle.Italic;
+
+				EditorGUI.BeginDisabledGroup(true);
+				EditorGUI.TextArea(
+					new Rect(
+						pos.x + EditorGUIUtility.labelWidth + 5,
+						pos.y,
+						pos.width,
+						EditorGUIUtility.singleLineHeight
+					), 
+					"Root",
+					placeholderTextStyle
+				);
+				EditorGUI.EndDisabledGroup();
+			}
+
 			EditorGUI.EndProperty();
 		}
 
