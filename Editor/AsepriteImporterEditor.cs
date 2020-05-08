@@ -97,7 +97,7 @@ namespace Miscreant.Aseprite.Editor
 			GUI.DrawTexture(r, texture, ScaleMode.ScaleToFit);
 			EditorGUI.DropShadowLabel(
 				r,
-				$"Packed Size: {texture.width}x{texture.height} - Animation Clips: {importer.clipCount}"
+				$"Packed Size: {texture.width}x{texture.height} | Sprites: {importer.SpriteCount} | Clips: {importer.clipCount}"
 			);
 		}
 

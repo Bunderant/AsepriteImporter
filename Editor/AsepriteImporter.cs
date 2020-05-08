@@ -29,7 +29,12 @@ namespace Miscreant.Aseprite.Editor
 		private Texture2D m_atlas;
 		public Texture2D Atlas { get { return m_atlas; } }
 
+		[SerializeField]
+		private int m_spriteCount;
+		public int SpriteCount { get { return m_spriteCount; } }
+
 		public int clipCount;
+
 
 		public override void OnImportAsset(AssetImportContext ctx)
 		{
@@ -71,13 +76,14 @@ namespace Miscreant.Aseprite.Editor
 			aseInfo.UpdateAsepriteData(JsonUtility.FromJson<SpriteSheetData>(File.ReadAllText(dataPath)));
 
 			m_atlas = CreateSpriteAtlasTextureAsset(
-				aseInfo.spriteSheetData.meta.size.w, 
+				aseInfo.spriteSheetData.meta.size.w,
 				aseInfo.spriteSheetData.meta.size.h,
 				File.ReadAllBytes(atlasPath)
 			);
 			ctx.AddObjectToAsset(m_atlas.name, m_atlas);
 
 			List<Sprite> sprites = CreateSpritesForAtlas(m_atlas, aseInfo.spriteSheetData);
+			m_spriteCount = sprites.Count;
 			foreach (Sprite sprite in sprites)
 			{
 				ctx.AddObjectToAsset(sprite.name, sprite);
@@ -266,7 +272,7 @@ namespace Miscreant.Aseprite.Editor
 
 			return FinalizeAnimationClips(aseInfo, clips);
 		}
-    
+
 		private GeneratedClip[] FinalizeAnimationClips(AsepriteFileInfo aseInfo, List<AnimationClip> clips)
 		{
 			clipCount = clips.Count;
@@ -283,7 +289,7 @@ namespace Miscreant.Aseprite.Editor
 			{
 				AnimationClip clip = clips[i];
 				string tagName = aseInfo.spriteSheetData.meta.frameTags[i].name;
-				
+
 				bool clipDoesExist = previousGeneratedClips.TryGetValue(tagName, out GeneratedClip clipData);
 
 				if (clipDoesExist)
