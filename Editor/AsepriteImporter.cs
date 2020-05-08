@@ -22,9 +22,13 @@ namespace Miscreant.Aseprite.Editor
 		public bool generateAnimationClips;
 		public ClipSettings clipSettings = ClipSettings.Default;
 
-		public GeneratedClip[] generatedClips;
+		[SerializeField]
+		private GeneratedClip[] m_generatedClips;
 
-		public Texture2D packedSpriteTexture;
+		[SerializeField]
+		private Texture2D m_atlas;
+		public Texture2D Atlas { get { return m_atlas; } }
+
 		public int clipCount;
 
 		public override void OnImportAsset(AssetImportContext ctx)
@@ -66,16 +70,14 @@ namespace Miscreant.Aseprite.Editor
 
 			aseInfo.UpdateAsepriteData(JsonUtility.FromJson<SpriteSheetData>(File.ReadAllText(dataPath)));
 
-			Texture2D atlasTexture = new Texture2D(aseInfo.spriteSheetData.meta.size.w, aseInfo.spriteSheetData.meta.size.h, TextureFormat.RGBA32, false);
+			m_atlas = CreateSpriteAtlasTextureAsset(
+				aseInfo.spriteSheetData.meta.size.w, 
+				aseInfo.spriteSheetData.meta.size.h,
+				File.ReadAllBytes(atlasPath)
+			);
+			ctx.AddObjectToAsset(m_atlas.name, m_atlas);
 
-			atlasTexture.LoadImage(File.ReadAllBytes(atlasPath), true);
-			atlasTexture.filterMode = FilterMode.Point;
-			atlasTexture.name = "Packed Sprites";
-			atlasTexture.hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy;
-			ctx.AddObjectToAsset(atlasTexture.name, atlasTexture);
-			packedSpriteTexture = atlasTexture;
-
-			List<Sprite> sprites = CreateSpritesForAtlas(atlasTexture, aseInfo.spriteSheetData);
+			List<Sprite> sprites = CreateSpritesForAtlas(m_atlas, aseInfo.spriteSheetData);
 			foreach (Sprite sprite in sprites)
 			{
 				ctx.AddObjectToAsset(sprite.name, sprite);
@@ -83,48 +85,19 @@ namespace Miscreant.Aseprite.Editor
 
 			if (generateAnimationClips)
 			{
-				List<AnimationClip> clips = CreateAnimationClips(aseInfo, sprites);
-				clipCount = clips.Count;
-
-				var previousGeneratedClips = new Dictionary<string, GeneratedClip>();
-				foreach (var generatedClip in generatedClips)
+				m_generatedClips = CreateAnimationClips(aseInfo, sprites);
+				foreach (GeneratedClip clipData in m_generatedClips)
 				{
-					previousGeneratedClips.Add(generatedClip.name, generatedClip);
-				}
-
-				var newGeneratedClips = new List<GeneratedClip>(clipCount);
-
-				for (int i = 0; i < clipCount; i++)
-				{
-					AnimationClip clip = clips[i];
-					string tagName = aseInfo.spriteSheetData.meta.frameTags[i].name;
-					
-					bool clipDoesExist = previousGeneratedClips.TryGetValue(tagName, out GeneratedClip clipData);
-
-					if (clipDoesExist)
-					{
-						clipData.name = tagName;
-						clipData.clip = clipData.createMode != GeneratedClip.CreateMode.Merge ? clip : null;
-					}
-					else
-					{
-						clipData = GeneratedClip.Create(aseInfo.spriteSheetData.meta.frameTags[i].name, clip);
-					}
-					
 					if (clipData.createMode != GeneratedClip.CreateMode.Merge)
 					{
-						ctx.AddObjectToAsset(clip.name, clip);
+						ctx.AddObjectToAsset(clipData.name, clipData.clip);
 					}
-
-					newGeneratedClips.Add(clipData);
 				}
-
-				generatedClips = newGeneratedClips.ToArray();
 			}
 			else
 			{
 				clipCount = 0;
-				generatedClips = new GeneratedClip[clipCount];
+				m_generatedClips = new GeneratedClip[clipCount];
 			}
 
 			// Now that we have all generated assets saved as sub-objects, delete the temp files created by Aseprite. 
@@ -147,6 +120,18 @@ namespace Miscreant.Aseprite.Editor
 			// Trim Application.dataPath from the front, rather than search for the "Assets" folder, 
 			// just in case there are other subfolders with that name. 
 			return absolutePath.Remove(0, Application.dataPath.Length - "Assets".Length);
+		}
+
+		private Texture2D CreateSpriteAtlasTextureAsset(int width, int height, byte[] rawData)
+		{
+			var atlas = new Texture2D(width, height, TextureFormat.RGBA32, false);
+
+			atlas.LoadImage(rawData, true);
+			atlas.filterMode = FilterMode.Point;
+			atlas.name = "Packed Sprites";
+			atlas.hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy;
+
+			return atlas;
 		}
 
 		private List<Sprite> CreateSpritesForAtlas(Texture2D atlas, SpriteSheetData sheetData)
@@ -196,7 +181,7 @@ namespace Miscreant.Aseprite.Editor
 			return spriteLookup;
 		}
 
-		private List<AnimationClip> CreateAnimationClips(AsepriteFileInfo aseInfo, List<Sprite> sprites)
+		private GeneratedClip[] CreateAnimationClips(AsepriteFileInfo aseInfo, List<Sprite> sprites)
 		{
 			SpriteSheetData sheetData = aseInfo.spriteSheetData;
 
@@ -279,7 +264,42 @@ namespace Miscreant.Aseprite.Editor
 				clips.Add(clip);
 			}
 
-			return clips;
+			return FinalizeAnimationClips(aseInfo, clips);
 		}
-    }
+    
+		private GeneratedClip[] FinalizeAnimationClips(AsepriteFileInfo aseInfo, List<AnimationClip> clips)
+		{
+			clipCount = clips.Count;
+
+			var previousGeneratedClips = new Dictionary<string, GeneratedClip>();
+			foreach (var generatedClip in m_generatedClips)
+			{
+				previousGeneratedClips.Add(generatedClip.name, generatedClip);
+			}
+
+			var newGeneratedClips = new List<GeneratedClip>(clipCount);
+
+			for (int i = 0; i < clipCount; i++)
+			{
+				AnimationClip clip = clips[i];
+				string tagName = aseInfo.spriteSheetData.meta.frameTags[i].name;
+				
+				bool clipDoesExist = previousGeneratedClips.TryGetValue(tagName, out GeneratedClip clipData);
+
+				if (clipDoesExist)
+				{
+					clipData.name = tagName;
+					clipData.clip = clipData.createMode != GeneratedClip.CreateMode.Merge ? clip : null;
+				}
+				else
+				{
+					clipData = GeneratedClip.Create(tagName, clip);
+				}
+
+				newGeneratedClips.Add(clipData);
+			}
+
+			return newGeneratedClips.ToArray();
+		}
+	}
 }

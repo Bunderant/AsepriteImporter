@@ -24,7 +24,7 @@ namespace Miscreant.Aseprite.Editor
 
 		private void InitializeMergeTargetLists(SerializedProperty serializedProperty)
 		{
-			var generatedClipsProp = serializedProperty.serializedObject.FindProperty("generatedClips");
+			var generatedClipsProp = serializedProperty.serializedObject.FindProperty("m_generatedClips");
 			int clipCount = generatedClipsProp.arraySize;
 
 			_mergeTargetListLookup = new Dictionary<string, ReorderableList>(clipCount);

@@ -85,14 +85,14 @@ namespace Miscreant.Aseprite.Editor
 
 		public override bool HasPreviewGUI()
 		{
-			return ((AsepriteImporter)target).packedSpriteTexture != null;
+			return ((AsepriteImporter)target).Atlas != null;
 		}
 
 		public override void OnPreviewGUI(Rect r, GUIStyle background)
 		{
 			var importer = (AsepriteImporter)target;
 
-			Texture2D texture = importer.packedSpriteTexture;
+			Texture2D texture = importer.Atlas;
 
 			GUI.DrawTexture(r, texture, ScaleMode.ScaleToFit);
 			EditorGUI.DropShadowLabel(
@@ -103,7 +103,7 @@ namespace Miscreant.Aseprite.Editor
 
 		private void InitializeGeneratedClipList()
 		{
-			var generatedClipsProp = serializedObject.FindProperty("generatedClips");
+			var generatedClipsProp = serializedObject.FindProperty("m_generatedClips");
 
 			_generatedClipList = new ReorderableList(
 				generatedClipsProp.serializedObject,
