@@ -1,28 +1,15 @@
 ﻿using UnityEngine;
 using UnityEditor;
-using System.Collections.Generic;
 
 namespace Miscreant.Aseprite.Editor
 {
 	[CustomPropertyDrawer(typeof(GeneratedClip))]
 	public sealed class GeneratedClipDrawer : PropertyDrawer
 	{
-		private bool _isInitialized;
-		private Dictionary<string, bool> _foldoutLookup;
-
-		private void Initialize(SerializedProperty serializedProperty)
-		{
-			_foldoutLookup = new Dictionary<string, bool>();
-			_isInitialized = true;
-		}
+		private string _activeClipPath;
 
 		public override void OnGUI(Rect pos, SerializedProperty property, GUIContent label)
 		{
-			if (!_isInitialized)
-			{
-				Initialize(property);
-			}
-
 			var nameProp = property.FindPropertyRelative("name");
 			var clipProp = property.FindPropertyRelative("clip");
 			var rendererPathProp = property.FindPropertyRelative("rendererPathOverride");
@@ -35,15 +22,14 @@ namespace Miscreant.Aseprite.Editor
 			GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout);
 			foldoutStyle.fontStyle = FontStyle.Bold;
 
-			_foldoutLookup.TryGetValue(nameProp.propertyPath, out bool isFoldoutOpen);
-			_foldoutLookup[nameProp.propertyPath] = EditorGUI.Foldout(
+			bool foldoutOpen = EditorGUI.Foldout(
 				new Rect(
 					pos.x + 10, // Accounts for foldout arrow indentation.
 					pos.y,
 					pos.width - 20, // Accounts for foldout arrow indentation.
 					EditorGUIUtility.singleLineHeight
 				),
-				isFoldoutOpen,
+				_activeClipPath == nameProp.propertyPath,
 				nameProp.stringValue,
 				true,
 				foldoutStyle
@@ -52,8 +38,14 @@ namespace Miscreant.Aseprite.Editor
 			pos.y += EditorGUIUtility.standardVerticalSpacing;
 			pos.y += EditorGUIUtility.singleLineHeight;
 
-			if (isFoldoutOpen)
+			if (!foldoutOpen && _activeClipPath == nameProp.propertyPath)
 			{
+				_activeClipPath = null;
+			}
+			else if (foldoutOpen)
+			{
+				_activeClipPath = nameProp.propertyPath;
+
 				// Indent everything within the foldout scope.
 				pos.x += 10;
 				pos.xMax -= 10;
@@ -114,14 +106,8 @@ namespace Miscreant.Aseprite.Editor
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
-			if (!_isInitialized)
-			{
-				Initialize(property);
-			}
-
 			var nameProp = property.FindPropertyRelative("name");
-			_foldoutLookup.TryGetValue(nameProp.propertyPath, out bool isFoldoutOpen);
-			if (!isFoldoutOpen)
+			if (nameProp.propertyPath != _activeClipPath)
 			{
 				return EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2;
 			}
