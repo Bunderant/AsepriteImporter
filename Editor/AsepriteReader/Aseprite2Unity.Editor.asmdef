@@ -1,8 +1,6 @@
 {
-    "name": "Miscreant.Aseprite.Editor",
-    "references": [
-        "GUID:0c5d0a6cd44c17142bd82ee79784ae9f"
-    ],
+    "name": "Aseprite2Unity.Editor",
+    "references": [],
     "includePlatforms": [
         "Editor"
     ],
@@ -10,7 +8,7 @@
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
-    "autoReferenced": true,
+    "autoReferenced": false,
     "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false
