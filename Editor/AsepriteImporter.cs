@@ -94,7 +94,10 @@ namespace Miscreant.Aseprite.Editor
 				m_generatedClips = CreateAnimationClips(aseInfo, sprites);
 				foreach (GeneratedClip clipData in m_generatedClips)
 				{
-					ctx.AddObjectToAsset(clipData.name, clipData.clip);
+					if (clipData.createMode != GeneratedClip.CreateMode.Merge)
+					{
+						ctx.AddObjectToAsset(clipData.name, clipData.clip);
+					}
 				}
 			}
 			else
@@ -292,7 +295,7 @@ namespace Miscreant.Aseprite.Editor
 				if (clipDoesExist)
 				{
 					clipData.name = tagName;
-					clipData.clip = clip;
+					clipData.clip = clipData.createMode != GeneratedClip.CreateMode.Merge ? clip : null;
 				}
 				else
 				{
