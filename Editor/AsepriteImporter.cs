@@ -47,10 +47,10 @@ namespace Miscreant.Aseprite.Editor
 			var fileInfo = string.IsNullOrEmpty(userData) ? new AsepriteFileInfo() : JsonUtility.FromJson<AsepriteFileInfo>(userData);
 			fileInfo.Initialize(assetPath);
 
-			GenerateAssets(fileInfo, ctx);
+			GenerateAssets(settings, fileInfo, ctx);
 		}
 
-		private void GenerateAssets(AsepriteFileInfo aseInfo, AssetImportContext ctx)
+		private void GenerateAssets(Settings settings, AsepriteFileInfo aseInfo, AssetImportContext ctx)
 		{
 			string atlasPath = $"{aseInfo.absoluteDirectoryPath}/{aseInfo.title}_aseprite.png";
 			string dataPath = $"{aseInfo.absoluteDirectoryPath}/{aseInfo.title}_aseprite.json";
@@ -91,7 +91,7 @@ namespace Miscreant.Aseprite.Editor
 
 			if (generateAnimationClips)
 			{
-				m_generatedClips = CreateAnimationClips(aseInfo, sprites);
+				m_generatedClips = CreateAnimationClips(settings, aseInfo, sprites);
 				foreach (GeneratedClip clipData in m_generatedClips)
 				{
 					if (clipData.createMode != GeneratedClip.CreateMode.Merge)
@@ -187,7 +187,7 @@ namespace Miscreant.Aseprite.Editor
 			return spriteLookup;
 		}
 
-		private GeneratedClip[] CreateAnimationClips(AsepriteFileInfo aseInfo, List<Sprite> sprites)
+		private GeneratedClip[] CreateAnimationClips(Settings settings, AsepriteFileInfo aseInfo, List<Sprite> sprites)
 		{
 			SpriteSheetData sheetData = aseInfo.spriteSheetData;
 
@@ -223,8 +223,14 @@ namespace Miscreant.Aseprite.Editor
 
 				AnimationClip clip = new AnimationClip();
 				clip.wrapMode = WrapMode.Loop;
-				clip.frameRate = clipSettings.sampleRate; // TODO: Miscreant: Should be configurable in the inspector. 
 				clip.name = clipName;
+
+				int[] frameTimesInMilliseconds = new int[clipInfo.Count];
+				for (int iFrame = 0; iFrame < frameTimesInMilliseconds.Length; iFrame++)
+				{
+					frameTimesInMilliseconds[iFrame] = clipInfo[iFrame].duration;
+				}
+				clip.frameRate = ClipSettings.CalculateAutoFrameRate(settings.MaxSampleRate, frameTimesInMilliseconds);
 
 				AnimationClipSettings currentClipSettings = AnimationUtility.GetAnimationClipSettings(clip);
 				currentClipSettings.loopTime = true;
@@ -249,13 +255,16 @@ namespace Miscreant.Aseprite.Editor
 					keyframes.Add(keyframe);
 
 					// Divide frame duration by 1000 because it is specified by Aseprite in milliseconds. 
-					currentDuration += clipInfo[i].duration / 1000f;
+					float keyDuration = clipInfo[i].duration / 1000f;
+					currentDuration += keyDuration;
 
+					// TODO: Miscreant: Do these calculations before any sec/msec conversions for more precision
 					// Tack on a duplicate of the last keyframe to ensure the last frame gets its full duration
-					if (i == clipLength - 1)
+					if (i == clipLength - 1 && keyDuration > (1.0f / clip.frameRate))
 					{
 						keyframe = new ObjectReferenceKeyframe();
-						keyframe.time = currentDuration;
+						// The last frame will persist for one full sample, so subtract that from the current time
+						keyframe.time = currentDuration - (1.0f / clip.frameRate);
 						keyframe.value = clipInfo[i].sprite;
 						keyframes.Add(keyframe);
 					}
