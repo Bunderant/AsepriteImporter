@@ -1,8 +1,6 @@
 {
     "name": "Miscreant.Aseprite.Editor",
-    "references": [
-        "GUID:0c5d0a6cd44c17142bd82ee79784ae9f"
-    ],
+    "references": [],
     "includePlatforms": [
         "Editor"
     ],
