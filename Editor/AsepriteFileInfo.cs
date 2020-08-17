@@ -22,18 +22,6 @@ namespace Miscreant.Aseprite.Editor
 			this.title = fileName.Substring(0, fileName.LastIndexOf("."));
 		}
 
-		public void UpdateAsepriteData(SpriteSheetData newData)
-		{
-			// If the data hasn't initialized yet, just set it directly and return. 
-			if (ReferenceEquals(spriteSheetData, null))
-			{
-				this.spriteSheetData = newData;
-				return;
-			}
-
-			this.spriteSheetData = newData;
-		}
-
 		public override string ToString()
 		{
 			return $"{nameof(AsepriteFileInfo)}:\n\t{nameof(title)}: {title}\n\t{nameof(fileName)}: {fileName}\n" +
