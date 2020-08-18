@@ -102,6 +102,11 @@ namespace Miscreant.Aseprite.Editor
 
 			m_clipCount = m_generatedClips.Length;
 
+			AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+
+			// Apply clip merging
+			foreach (GeneratedClip generatedClip in m_generatedClips) generatedClip.TryMerge();
+
 			// Add all subassets to the import context
 			context.AddObjectToAsset(m_atlas.name, m_atlas);
 
@@ -312,7 +317,7 @@ namespace Miscreant.Aseprite.Editor
 				if (clipDoesExist)
 				{
 					clipData.name = tagName;
-					clipData.clip = clipData.createMode != GeneratedClip.CreateMode.Merge ? clip : null;
+					clipData.clip = clip;
 				}
 				else
 				{

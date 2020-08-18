@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEditor;
 using System;
 
 namespace Miscreant.Aseprite.Editor
@@ -37,6 +38,33 @@ namespace Miscreant.Aseprite.Editor
 				clip = generatedClip,
 				mergeTargetClips = new MergedClip[] { MergedClip.Default } // Include one so the user doesn't have to add it manually 
 			};
+		}
+
+		public void TryMerge()
+		{
+			if (createMode == CreateMode.Subasset)
+			{
+				return;
+			}
+
+			// Get the sprite renderer curves from the base clip
+			EditorCurveBinding[] bindings = AnimationUtility.GetObjectReferenceCurveBindings(clip);
+
+			// The base clip's binding will always be the only binding for the generated curve
+			ObjectReferenceKeyframe[] keyframes = AnimationUtility.GetObjectReferenceCurve(clip, bindings[0]);
+
+			string rendererPath = !string.IsNullOrEmpty(rendererPathOverride) ?
+				rendererPathOverride :
+				bindings[0].path;
+
+			foreach (MergedClip mergeTarget in mergeTargetClips)
+			{
+				string currentRendererPath = !string.IsNullOrEmpty(mergeTarget.rendererPathOverride) ?
+					mergeTarget.rendererPathOverride :
+					rendererPath;
+
+				mergeTarget.SetKeyframes(keyframes, currentRendererPath);
+			}
 		}
 	}
 }
