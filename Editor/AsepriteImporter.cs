@@ -230,11 +230,6 @@ namespace Miscreant.Aseprite.Editor
 				currentClipSettings.loopTime = true;
 				AnimationUtility.SetAnimationClipSettings(clip, currentClipSettings);
 
-				var spriteBinding = new EditorCurveBinding();
-				spriteBinding.type = typeof(SpriteRenderer);
-				spriteBinding.path = clipSettings.spriteRendererPath;
-				spriteBinding.propertyName = "m_Sprite";
-
 				int clipLength = clipInfo.Count;
 				var keyframes = new List<ObjectReferenceKeyframe>(clipLength + 1);
 
@@ -242,13 +237,12 @@ namespace Miscreant.Aseprite.Editor
 
 				for (int i = 0; i < clipLength; i++)
 				{
-					var keyframe = new ObjectReferenceKeyframe();
+					keyframes.Add(new ObjectReferenceKeyframe {
+						value = clipInfo[i].sprite,
+						time = currentDuration
+					});
 
-					keyframe.value = clipInfo[i].sprite;
-					keyframe.time = currentDuration;
-					keyframes.Add(keyframe);
-
-					// Divide frame duration by 1000 because it is specified by Aseprite in milliseconds. 
+					// Divide frame duration by 1000 because it is specified by Aseprite in milliseconds
 					float keyDuration = clipInfo[i].duration / 1000f;
 					currentDuration += keyDuration;
 
@@ -256,17 +250,21 @@ namespace Miscreant.Aseprite.Editor
 					// Tack on a duplicate of the last keyframe to ensure the last frame gets its full duration
 					if (i == clipLength - 1 && keyDuration > (1.0f / clip.frameRate))
 					{
-						keyframe = new ObjectReferenceKeyframe();
-						// The last frame will persist for one full sample, so subtract that from the current time
-						keyframe.time = currentDuration - (1.0f / clip.frameRate);
-						keyframe.value = clipInfo[i].sprite;
-						keyframes.Add(keyframe);
+						keyframes.Add(new ObjectReferenceKeyframe {
+							// The last frame will persist for one full sample, so subtract that from the current time
+							time = currentDuration - (1.0f / clip.frameRate),
+							value = clipInfo[i].sprite
+						});
 					}
 				}
 
 				AnimationUtility.SetObjectReferenceCurve(
 					clip,
-					spriteBinding,
+					new EditorCurveBinding {
+						type = typeof(SpriteRenderer),
+						path = clipSettings.spriteRendererPath,
+						propertyName = "m_Sprite"
+					},
 					keyframes.ToArray()
 				);
 
