@@ -212,64 +212,75 @@ namespace Miscreant.Aseprite.Editor
 
 			foreach (var kvp in clipInfoLookup)
 			{
-				string clipName = kvp.Key;
-				List<(Sprite sprite, int durationMS)> keyInfo = kvp.Value;
-
-				AnimationClip clip = new AnimationClip();
-				clip.wrapMode = WrapMode.Loop;
-				clip.name = clipName;
-
-				int[] frameTimesInMilliseconds = new int[keyInfo.Count];
-				for (int iFrame = 0; iFrame < frameTimesInMilliseconds.Length; iFrame++)
-				{
-					frameTimesInMilliseconds[iFrame] = keyInfo[iFrame].durationMS;
-				}
-				clip.frameRate = ClipSettings.CalculateAutoFrameRate(settings.MaxSampleRate, frameTimesInMilliseconds);
-
-				AnimationClipSettings currentClipSettings = AnimationUtility.GetAnimationClipSettings(clip);
-				currentClipSettings.loopTime = true;
-				AnimationUtility.SetAnimationClipSettings(clip, currentClipSettings);
-
-				int clipLength = keyInfo.Count;
-				var keyframes = new List<ObjectReferenceKeyframe>(clipLength + 1);
-
-				int currentTimeMS = 0;
-				for (int i = 0; i < clipLength; i++)
-				{
-					(Sprite sprite, int durationMS) currentKeyInfo = keyInfo[i];
-
-					keyframes.Add(new ObjectReferenceKeyframe {
-						value = currentKeyInfo.sprite,
-						time = currentTimeMS / 1000f
-					});
-
-					currentTimeMS += currentKeyInfo.durationMS;
-
-					// Tack on a duplicate of the last keyframe to ensure the last frame gets its full duration
-					if (i == clipLength - 1 && (currentKeyInfo.durationMS / 1000f) > (1.0f / clip.frameRate))
-					{
-						// In Unity, the last frame will always persist for one full sample, so subtract that from the key's designated time
-						keyframes.Add(new ObjectReferenceKeyframe {
-							time = (currentTimeMS / 1000f) - (1.0f / clip.frameRate),
-							value = currentKeyInfo.sprite
-						});
-					}
-				}
-
-				AnimationUtility.SetObjectReferenceCurve(
-					clip,
-					new EditorCurveBinding {
-						type = typeof(SpriteRenderer),
-						path = clipSettings.spriteRendererPath,
-						propertyName = "m_Sprite"
-					},
-					keyframes.ToArray()
-				);
-
-				clips.Add(clip);
+				clips.Add(CreateAnimationClip(
+					kvp.Key,
+					kvp.Value,
+					settings.MaxSampleRate,
+					clipSettings.spriteRendererPath
+				));
 			}
 
 			return FinalizeAnimationClips(aseInfo, clips);
+		}
+
+		private static AnimationClip CreateAnimationClip(
+			string clipName,
+			List<(Sprite sprite, int durationMS)> keyInfo,
+			float maxSampleRate = Settings.DEFAULT_MAX_SAMPLE_RATE,
+			string spriteRendererPath = "")
+		{
+			AnimationClip clip = new AnimationClip();
+			clip.wrapMode = WrapMode.Loop;
+			clip.name = clipName;
+
+			int[] frameTimesInMilliseconds = new int[keyInfo.Count];
+			for (int iFrame = 0; iFrame < frameTimesInMilliseconds.Length; iFrame++)
+			{
+				frameTimesInMilliseconds[iFrame] = keyInfo[iFrame].durationMS;
+			}
+			clip.frameRate = ClipSettings.CalculateAutoFrameRate(maxSampleRate, frameTimesInMilliseconds);
+
+			AnimationClipSettings currentClipSettings = AnimationUtility.GetAnimationClipSettings(clip);
+			currentClipSettings.loopTime = true;
+			AnimationUtility.SetAnimationClipSettings(clip, currentClipSettings);
+
+			int clipLength = keyInfo.Count;
+			var keyframes = new List<ObjectReferenceKeyframe>(clipLength + 1);
+
+			int currentTimeMS = 0;
+			for (int i = 0; i < clipLength; i++)
+			{
+				(Sprite sprite, int durationMS) currentKeyInfo = keyInfo[i];
+
+				keyframes.Add(new ObjectReferenceKeyframe {
+					value = currentKeyInfo.sprite,
+					time = currentTimeMS / 1000f
+				});
+
+				currentTimeMS += currentKeyInfo.durationMS;
+
+				// Tack on a duplicate of the last keyframe to ensure the last frame gets its full duration
+				if (i == clipLength - 1 && (currentKeyInfo.durationMS / 1000f) > (1.0f / clip.frameRate))
+				{
+					// In Unity, the last frame will always persist for one full sample, so subtract that from the key's designated time
+					keyframes.Add(new ObjectReferenceKeyframe {
+						time = (currentTimeMS / 1000f) - (1.0f / clip.frameRate),
+						value = currentKeyInfo.sprite
+					});
+				}
+			}
+
+			AnimationUtility.SetObjectReferenceCurve(
+				clip,
+				new EditorCurveBinding {
+					type = typeof(SpriteRenderer),
+					path = spriteRendererPath,
+					propertyName = "m_Sprite"
+				},
+				keyframes.ToArray()
+			);
+
+			return clip;
 		}
 
 		private GeneratedClip[] FinalizeAnimationClips(AsepriteFileInfo aseInfo, List<AnimationClip> clips)
