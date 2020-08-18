@@ -181,25 +181,6 @@ namespace Miscreant.Aseprite.Editor
 			return sprites;
 		}
 
-		private Dictionary<string, Sprite> GetSpriteLookup(string atlasAssetPath)
-		{
-			Object[] spriteObjects = AssetDatabase.LoadAllAssetRepresentationsAtPath(atlasAssetPath);
-
-			var spriteLookup = new Dictionary<string, Sprite>(spriteObjects.Length);
-			foreach (var obj in spriteObjects)
-			{
-				if (!(obj is Sprite))
-				{
-					continue;
-				}
-
-				var sprite = (Sprite)obj;
-				spriteLookup.Add(sprite.name, sprite);
-			}
-
-			return spriteLookup;
-		}
-
 		private GeneratedClip[] CreateAnimationClips(Settings settings, AsepriteFileInfo aseInfo, List<Sprite> sprites)
 		{
 			SpriteSheetData sheetData = aseInfo.spriteSheetData;
