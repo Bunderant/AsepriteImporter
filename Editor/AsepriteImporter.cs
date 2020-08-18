@@ -226,8 +226,8 @@ namespace Miscreant.Aseprite.Editor
 		private static AnimationClip CreateAnimationClip(
 			string clipName,
 			List<(Sprite sprite, int durationMS)> keyInfo,
-			float maxSampleRate = Settings.DEFAULT_MAX_SAMPLE_RATE,
-			string spriteRendererPath = "")
+			float maxSampleRate,
+			string spriteRendererPath)
 		{
 			AnimationClip clip = new AnimationClip();
 			clip.wrapMode = WrapMode.Loop;
