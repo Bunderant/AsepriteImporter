@@ -213,16 +213,16 @@ namespace Miscreant.Aseprite.Editor
 			foreach (var kvp in clipInfoLookup)
 			{
 				string clipName = kvp.Key;
-				List<(Sprite sprite, int duration)> clipInfo = kvp.Value;
+				List<(Sprite sprite, int durationMS)> keyInfo = kvp.Value;
 
 				AnimationClip clip = new AnimationClip();
 				clip.wrapMode = WrapMode.Loop;
 				clip.name = clipName;
 
-				int[] frameTimesInMilliseconds = new int[clipInfo.Count];
+				int[] frameTimesInMilliseconds = new int[keyInfo.Count];
 				for (int iFrame = 0; iFrame < frameTimesInMilliseconds.Length; iFrame++)
 				{
-					frameTimesInMilliseconds[iFrame] = clipInfo[iFrame].duration;
+					frameTimesInMilliseconds[iFrame] = keyInfo[iFrame].durationMS;
 				}
 				clip.frameRate = ClipSettings.CalculateAutoFrameRate(settings.MaxSampleRate, frameTimesInMilliseconds);
 
@@ -230,30 +230,28 @@ namespace Miscreant.Aseprite.Editor
 				currentClipSettings.loopTime = true;
 				AnimationUtility.SetAnimationClipSettings(clip, currentClipSettings);
 
-				int clipLength = clipInfo.Count;
+				int clipLength = keyInfo.Count;
 				var keyframes = new List<ObjectReferenceKeyframe>(clipLength + 1);
 
-				float currentDuration = 0f;
-
+				int currentTimeMS = 0;
 				for (int i = 0; i < clipLength; i++)
 				{
+					(Sprite sprite, int durationMS) currentKeyInfo = keyInfo[i];
+
 					keyframes.Add(new ObjectReferenceKeyframe {
-						value = clipInfo[i].sprite,
-						time = currentDuration
+						value = currentKeyInfo.sprite,
+						time = currentTimeMS / 1000f
 					});
 
-					// Divide frame duration by 1000 because it is specified by Aseprite in milliseconds
-					float keyDuration = clipInfo[i].duration / 1000f;
-					currentDuration += keyDuration;
+					currentTimeMS += currentKeyInfo.durationMS;
 
-					// TODO: Miscreant: Do these calculations before any sec/msec conversions for more precision
 					// Tack on a duplicate of the last keyframe to ensure the last frame gets its full duration
-					if (i == clipLength - 1 && keyDuration > (1.0f / clip.frameRate))
+					if (i == clipLength - 1 && (currentKeyInfo.durationMS / 1000f) > (1.0f / clip.frameRate))
 					{
+						// In Unity, the last frame will always persist for one full sample, so subtract that from the key's designated time
 						keyframes.Add(new ObjectReferenceKeyframe {
-							// The last frame will persist for one full sample, so subtract that from the current time
-							time = currentDuration - (1.0f / clip.frameRate),
-							value = clipInfo[i].sprite
+							time = (currentTimeMS / 1000f) - (1.0f / clip.frameRate),
+							value = currentKeyInfo.sprite
 						});
 					}
 				}
