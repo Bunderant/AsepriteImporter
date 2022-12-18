@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
+using UnityEditor.AssetImporters;
 using UnityEditor;
-using UnityEditor.Experimental.AssetImporters;
+
 using System.IO;
 using System.Collections.Generic;
 
@@ -9,9 +10,9 @@ namespace Miscreant.Aseprite.Editor
 	using Object = UnityEngine.Object;
 
 #if ASEPRITE_FULL_EXT_ONLY
-	[ScriptedImporter(AsepriteImporter.VERSION, new string[] { "aseprite" }, AsepriteImporter.QUEUE_OFFSET, AllowCaching = AsepriteImporter.IS_CACHING_ALLOWED)]
+	[ScriptedImporter(VERSION, new string[] { "aseprite" }, QUEUE_OFFSET, AllowCaching = IS_CACHING_ALLOWED)]
 #else
-	[ScriptedImporter(AsepriteImporter.VERSION, new string[] { "ase", "aseprite" }, AsepriteImporter.QUEUE_OFFSET, AllowCaching = AsepriteImporter.IS_CACHING_ALLOWED)]
+	[ScriptedImporter(VERSION, new string[] { "ase", "aseprite" }, QUEUE_OFFSET, AllowCaching = IS_CACHING_ALLOWED)]
 #endif
 	public sealed class AsepriteImporter : ScriptedImporter
 	{

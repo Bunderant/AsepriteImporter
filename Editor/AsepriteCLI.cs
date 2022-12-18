@@ -32,10 +32,10 @@ namespace Miscreant.Aseprite.Editor
 			}
 		}
 
-		[MenuItem("Miscreant/Aseprite Importer/Validate Aseprite Path")]
 		/// <summary>
 		/// Prints the currently installed version of Aseprite. 
 		/// </summary>
+		[MenuItem("Miscreant/Aseprite Importer/Validate Aseprite Path")]
 		internal static void CheckAsepriteInstallation()
 		{
 			Run(
